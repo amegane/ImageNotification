@@ -1,7 +1,6 @@
 package com.amegane3231.imagenotification.ui.fragments
 
 import android.app.Activity
-import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -12,24 +11,37 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
+import androidx.compose.material.Button
+import androidx.compose.material.Text
+import androidx.compose.runtime.*
+import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.unit.dp
+import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.core.content.edit
+import androidx.core.graphics.createBitmap
 import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
 import androidx.preference.PreferenceManager
+import com.amegane3231.imagenotification.R
 import com.amegane3231.imagenotification.data.SharedPreferenceKey
-import com.amegane3231.imagenotification.databinding.FragmentHomeBinding
 import com.amegane3231.imagenotification.interfaces.ImageProcessingListener
 import com.amegane3231.imagenotification.service.ForeGroundService
-import com.bumptech.glide.Glide
+import com.amegane3231.imagenotification.viewmodels.HomeViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
 class HomeFragment : Fragment(), ImageProcessingListener {
-    private lateinit var binding: FragmentHomeBinding
+    private val homeViewModel: HomeViewModel by lazy { HomeViewModel() }
+    private var imageUri: Uri? = null
     private var isPinned = false
-    private val imageContent =
+    private val getImageContent =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
             if (it.resultCode == Activity.RESULT_OK && it.data?.data != null) {
                 val uri = it.data?.data!!
@@ -37,7 +49,7 @@ class HomeFragment : Fragment(), ImageProcessingListener {
                     putString(SharedPreferenceKey.ImageUri.name, uri.toString())
                 }
                 val iconImage = getBitmap(uri)
-                setImage(iconImage, requireContext())
+                homeViewModel.setImage(iconImage)
                 isPinned = true
                 startService(uri)
             }
@@ -47,26 +59,13 @@ class HomeFragment : Fragment(), ImageProcessingListener {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        binding = FragmentHomeBinding.inflate(inflater, container, false)
-
-        val imageUri = PreferenceManager.getDefaultSharedPreferences(requireContext())
+        imageUri = PreferenceManager.getDefaultSharedPreferences(requireContext())
             .getString(SharedPreferenceKey.ImageUri.name, "")?.toUri()
-        imageUri?.let {
-            setImage(it, requireContext())
-            startService(it)
-        }
-
-        binding.buttonSetNotification.setOnClickListener {
-            val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
-                addCategory(Intent.CATEGORY_OPENABLE)
-                type = "image/png"
-            }
-            if (intent.resolveActivity(requireContext().packageManager) != null) {
-                imageContent.launch(intent)
+        return ComposeView(inflater.context).apply {
+            setContent {
+                ConstraintLayoutContent()
             }
         }
-
-        return binding.root
     }
 
     private fun startService(uri: Uri) {
@@ -80,24 +79,73 @@ class HomeFragment : Fragment(), ImageProcessingListener {
         }
     }
 
-    private fun getBitmap(uri: Uri): Bitmap {
-        val openFileDescriptor =
-            requireContext().contentResolver.openFileDescriptor(uri, "r")
-        val fileDescriptor = openFileDescriptor?.fileDescriptor
-        val bitmap = BitmapFactory.decodeFileDescriptor(fileDescriptor)
-        openFileDescriptor?.close()
-        return bitmap
+    private fun getBitmap(uri: Uri): ImageBitmap {
+        return try {
+            val openFileDescriptor =
+                requireContext().contentResolver.openFileDescriptor(uri, "r")
+            val fileDescriptor = openFileDescriptor?.fileDescriptor
+            val bitmap = BitmapFactory.decodeFileDescriptor(fileDescriptor)
+            openFileDescriptor?.close()
+            bitmap.asImageBitmap()
+        } catch (e: Exception) {
+            Log.e("Exception", e.toString())
+            createBitmap(
+                width = DEFAULT_IMAGE_WIDTH,
+                height = DEFAULT_IMAGE_HEIGHT,
+                config = Bitmap.Config.ARGB_8888
+            ).asImageBitmap()
+        }
     }
 
-    private fun setImage(uri: Uri, context: Context) {
-        Glide.with(context).load(uri).into(binding.imageNotification)
-    }
-
-    private fun setImage(bitmap: Bitmap, context: Context) {
-        Glide.with(context).load(bitmap).into(binding.imageNotification)
+    @Composable
+    fun ConstraintLayoutContent() {
+        ConstraintLayout {
+            val (image, button) = createRefs()
+            if (imageUri != null) {
+                val imageBitmap = getBitmap(imageUri!!)
+                val imageState by homeViewModel.imageState.observeAsState()
+                if (imageState != null) {
+                    Image(
+                        bitmap = imageState!!,
+                        contentDescription = null,
+                        modifier = Modifier.constrainAs(image) {
+                            start.linkTo(parent.start)
+                            end.linkTo(parent.end)
+                        })
+                } else {
+                    Image(
+                        bitmap = imageBitmap,
+                        contentDescription = null,
+                        modifier = Modifier.constrainAs(image) {
+                            start.linkTo(parent.start)
+                            end.linkTo(parent.end)
+                        })
+                }
+                startService(imageUri!!)
+            } else {
+                val imageState by homeViewModel.imageState.observeAsState()
+                imageState?.let { Image(bitmap = it, contentDescription = null) }
+            }
+            Button(onClick = {
+                val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+                    addCategory(Intent.CATEGORY_OPENABLE)
+                    type = "image/png"
+                }
+                if (intent.resolveActivity(requireContext().packageManager) != null) {
+                    getImageContent.launch(intent)
+                }
+            }, modifier = Modifier.constrainAs(button) {
+                start.linkTo(parent.start)
+                end.linkTo(parent.end)
+                bottom.linkTo(parent.bottom, margin = 12.dp)
+            }) {
+                Text(text = getString(R.string.button_change_image))
+            }
+        }
     }
 
     companion object {
-        private const val CHANNEL_ID = "7"
+        private const val DEFAULT_IMAGE_WIDTH = 512
+        private const val DEFAULT_IMAGE_HEIGHT = 512
     }
 }
