@@ -16,6 +16,7 @@ import androidx.core.app.NotificationCompat
 import androidx.core.graphics.drawable.IconCompat
 import androidx.core.net.toUri
 import com.amegane3231.imagenotification.R
+import com.amegane3231.imagenotification.data.NotificationState
 import com.amegane3231.imagenotification.interfaces.ImageProcessingListener
 import java.io.IOException
 
@@ -50,22 +51,28 @@ class ForeGroundService : Service(), ImageProcessingListener {
         notification.flags = Notification.FLAG_ONGOING_EVENT
 
         if (!hasImage) return START_STICKY
-        val isPinned = intent?.getBooleanExtra("isPinned", false) ?: false
-        if (isPinned) {
-            stopForeground(STOP_FOREGROUND_REMOVE)
+        val notificationState = intent?.getSerializableExtra("notificationState") as NotificationState
+        when (notificationState) {
+            NotificationState.PIN_IMAGE -> {
+                startForeground(NOTIFICATION_ID, notification)
+            }
+            NotificationState.CHANGE_IMAGE -> {
+                stopForeground(STOP_FOREGROUND_REMOVE)
+                startForeground(NOTIFICATION_ID, notification)
+            }
+            NotificationState.CANCEL_IMAGE -> {
+                stopForeground(STOP_FOREGROUND_REMOVE)
+            }
         }
-        startForeground(NOTIFICATION_ID, notification)
-
         return START_STICKY
     }
 
     private fun getBitmap(uri: Uri): Bitmap? {
         return try {
-            val openFileDescriptor =
-                applicationContext.contentResolver.openFileDescriptor(uri, "r")
-            val fileDescriptor = openFileDescriptor?.fileDescriptor
-            val bitmap = BitmapFactory.decodeFileDescriptor(fileDescriptor)
-            openFileDescriptor?.close()
+            val bitmap =
+                applicationContext.contentResolver.openFileDescriptor(uri, "r").use {
+                    BitmapFactory.decodeFileDescriptor(it?.fileDescriptor)
+                }
             bitmap
         } catch (e: IOException) {
             return null
@@ -77,7 +84,6 @@ class ForeGroundService : Service(), ImageProcessingListener {
         bitmap?.let {
             val bitmapInstance = Bitmap.createBitmap(bitmap)
             val grayImage = rgbToGray(bitmapInstance)
-            val resizeImage = resize(grayImage, resources.displayMetrics.densityDpi)
             return createAlphaImage(grayImage)
         }
         return null
