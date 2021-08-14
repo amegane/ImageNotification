@@ -17,10 +17,11 @@ import androidx.core.graphics.*
 import androidx.core.graphics.drawable.IconCompat
 import com.amegane3231.imagenotification.R
 import com.amegane3231.imagenotification.data.NotificationState
-import com.amegane3231.imagenotification.interfaces.ImageProcessingListener
+import com.amegane3231.imagenotification.extensions.createAlphaImage
+import com.amegane3231.imagenotification.extensions.rgbToGray
 import java.io.IOException
 
-class ForeGroundService : Service(), ImageProcessingListener {
+class ForeGroundService : Service() {
     override fun onBind(intent: Intent?): IBinder? {
         return null
     }
@@ -44,8 +45,8 @@ class ForeGroundService : Service(), ImageProcessingListener {
                     applicationContext.openFileInput(it).use { stream ->
                         val bitmap = BitmapFactory.decodeStream(stream)
                         val bitmapInstance = Bitmap.createBitmap(bitmap)
-                        val grayImage = rgbToGray(bitmapInstance)
-                        val iconImage = createAlphaImage(grayImage)
+                        val grayImage = bitmapInstance.rgbToGray()
+                        val iconImage = grayImage.createAlphaImage()
                         setSmallIcon(IconCompat.createFromIcon(this@ForeGroundService, Icon.createWithAdaptiveBitmap(iconImage))!!)
                     }
                 } catch (e: Exception) {

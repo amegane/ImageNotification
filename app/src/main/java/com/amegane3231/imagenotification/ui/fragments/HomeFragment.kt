@@ -30,7 +30,6 @@ import androidx.preference.PreferenceManager
 import com.amegane3231.imagenotification.R
 import com.amegane3231.imagenotification.data.NotificationState
 import com.amegane3231.imagenotification.data.SharedPreferenceKey
-import com.amegane3231.imagenotification.interfaces.ImageProcessingListener
 import com.amegane3231.imagenotification.service.ForeGroundService
 import com.amegane3231.imagenotification.viewmodels.HomeViewModel
 import kotlinx.coroutines.CoroutineScope
@@ -40,7 +39,7 @@ import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
-class HomeFragment : Fragment(), ImageProcessingListener {
+class HomeFragment : Fragment() {
     private val homeViewModel: HomeViewModel by lazy { HomeViewModel() }
     private var isNotifying = false
     private val getImageContent =
@@ -192,7 +191,7 @@ class HomeFragment : Fragment(), ImageProcessingListener {
                         .fillMaxWidth()
                         .padding(PADDING_BUTTON)
                 ) {
-                    Text(text = it)
+                    Text(text = it.getString(requireContext()))
                 }
             }
         }
