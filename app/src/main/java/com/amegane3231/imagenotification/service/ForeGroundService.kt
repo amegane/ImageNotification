@@ -7,21 +7,20 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
-import androidx.core.graphics.*
 import android.graphics.BitmapFactory
 import android.graphics.drawable.Icon
 import android.net.Uri
 import android.os.IBinder
+import android.util.Log
 import androidx.core.app.NotificationCompat
+import androidx.core.graphics.*
 import androidx.core.graphics.drawable.IconCompat
-import androidx.core.net.toUri
 import com.amegane3231.imagenotification.R
 import com.amegane3231.imagenotification.data.NotificationState
 import com.amegane3231.imagenotification.interfaces.ImageProcessingListener
 import java.io.IOException
 
 class ForeGroundService : Service(), ImageProcessingListener {
-    private var hasImage = false
     override fun onBind(intent: Intent?): IBinder? {
         return null
     }
@@ -39,25 +38,26 @@ class ForeGroundService : Service(), ImageProcessingListener {
             setContentTitle(name)
             priority = NotificationCompat.PRIORITY_DEFAULT
 
-            val uri = intent?.getStringExtra("imageUri")?.toUri()
-            uri?.let {
-                val iconImage = createImageForIcon(uri)
-                iconImage?.let {
-                    setSmallIcon(IconCompat.createFromIcon(this@ForeGroundService, Icon.createWithAdaptiveBitmap(iconImage))!!)
-                    hasImage = true
+            val fileName = intent?.getStringExtra("fileName")
+            fileName?.let {
+                try {
+                    applicationContext.openFileInput(it).use { stream ->
+                        val bitmap = BitmapFactory.decodeStream(stream)
+                        val bitmapInstance = Bitmap.createBitmap(bitmap)
+                        val grayImage = rgbToGray(bitmapInstance)
+                        val iconImage = createAlphaImage(grayImage)
+                        setSmallIcon(IconCompat.createFromIcon(this@ForeGroundService, Icon.createWithAdaptiveBitmap(iconImage))!!)
+                    }
+                } catch (e: Exception) {
+                    Log.e("Exception", e.toString())
                 }
             }
         }.build()
         notification.flags = Notification.FLAG_ONGOING_EVENT
 
-        if (!hasImage) return START_STICKY
         val notificationState = intent?.getSerializableExtra("notificationState") as NotificationState
         when (notificationState) {
             NotificationState.PIN_IMAGE -> {
-                startForeground(NOTIFICATION_ID, notification)
-            }
-            NotificationState.CHANGE_IMAGE -> {
-                stopForeground(STOP_FOREGROUND_REMOVE)
                 startForeground(NOTIFICATION_ID, notification)
             }
             NotificationState.CANCEL_IMAGE -> {
@@ -77,16 +77,6 @@ class ForeGroundService : Service(), ImageProcessingListener {
         } catch (e: IOException) {
             return null
         }
-    }
-
-    private fun createImageForIcon(uri: Uri): Bitmap? {
-        val bitmap = getBitmap(uri)
-        bitmap?.let {
-            val bitmapInstance = Bitmap.createBitmap(bitmap)
-            val grayImage = rgbToGray(bitmapInstance)
-            return createAlphaImage(grayImage)
-        }
-        return null
     }
 
     companion object {

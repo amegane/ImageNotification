@@ -16,17 +16,15 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Button
 import androidx.compose.material.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.content.edit
 import androidx.core.graphics.createBitmap
-import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
 import androidx.preference.PreferenceManager
 import com.amegane3231.imagenotification.R
@@ -39,29 +37,29 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
-import java.io.File
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 class HomeFragment : Fragment(), ImageProcessingListener {
     private val homeViewModel: HomeViewModel by lazy { HomeViewModel() }
-    private var imageUri: Uri? = null
+    private var isNotifying = false
     private val getImageContent =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
             if (it.resultCode == Activity.RESULT_OK && it.data?.data != null) {
                 val uri = it.data?.data!!
-                val notificationState = if (this.imageUri != null) {
-                    NotificationState.CHANGE_IMAGE
-                } else {
-                    NotificationState.PIN_IMAGE
-                }
-                imageUri = uri
+                val notificationState = NotificationState.PIN_IMAGE
+                val date = LocalDateTime.now()
+                val formatter = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss")
+                val fileName = "${formatter.format(date)}.jpg"
                 PreferenceManager.getDefaultSharedPreferences(requireContext()).edit {
-                    putString(SharedPreferenceKey.ImageUri.name, uri.toString())
+                    putString(SharedPreferenceKey.ImageFileName.name, fileName)
                 }
                 val iconImage = getBitmap(uri)
-                homeViewModel.setImage(iconImage)
-                startService(uri, notificationState)
+                homeViewModel.setImage(iconImage.asImageBitmap())
+                isNotifying = true
+                homeViewModel.changeText(isNotifying)
+                saveImageFile(iconImage, fileName)
+                startService(fileName, notificationState)
             }
         }
 
@@ -69,12 +67,14 @@ class HomeFragment : Fragment(), ImageProcessingListener {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        imageUri = PreferenceManager.getDefaultSharedPreferences(requireContext())
-            .getString(SharedPreferenceKey.ImageUri.name, "")?.toUri()
-        imageUri?.let {
-            homeViewModel.setImage(getBitmap(it))
+        val imageFileName = PreferenceManager.getDefaultSharedPreferences(requireContext())
+            .getString(SharedPreferenceKey.ImageFileName.name, "")
+        imageFileName?.let {
+            homeViewModel.setImage(getBitmap(it).asImageBitmap())
             startService(it, NotificationState.PIN_IMAGE)
+            isNotifying = true
         }
+        homeViewModel.changeText(isNotifying)
         return ComposeView(inflater.context).apply {
             setContent {
                 LayoutContent()
@@ -82,11 +82,11 @@ class HomeFragment : Fragment(), ImageProcessingListener {
         }
     }
 
-    private fun startService(uri: Uri, notificationState: NotificationState) {
+    private fun startService(fileName: String, notificationState: NotificationState) {
         val coroutineScope = CoroutineScope(Dispatchers.Default + Job())
         coroutineScope.launch {
             val intent = Intent(requireContext(), ForeGroundService::class.java).apply {
-                putExtra("imageUri", uri.toString())
+                putExtra("fileName", fileName)
                 putExtra("notificationState", notificationState)
             }
             requireContext().startForegroundService(intent)
@@ -103,30 +103,57 @@ class HomeFragment : Fragment(), ImageProcessingListener {
         }
     }
 
-    private fun getBitmap(uri: Uri): ImageBitmap {
+    private fun getBitmap(uri: Uri): Bitmap {
         return try {
             val openFileDescriptor =
                 requireContext().contentResolver.openFileDescriptor(uri, "r")
             val fileDescriptor = openFileDescriptor?.fileDescriptor
             val bitmap = BitmapFactory.decodeFileDescriptor(fileDescriptor)
             openFileDescriptor?.close()
-            bitmap.asImageBitmap()
+            bitmap
         } catch (e: Exception) {
             Log.e("Exception", e.toString())
             createBitmap(
                 width = DEFAULT_IMAGE_WIDTH,
                 height = DEFAULT_IMAGE_HEIGHT,
                 config = Bitmap.Config.ARGB_8888
-            ).asImageBitmap()
+            )
         }
     }
 
-    @Preview
+    private fun getBitmap(fileName: String): Bitmap {
+        return try {
+            requireContext().openFileInput(fileName).use { stream ->
+                return BitmapFactory.decodeStream(stream)
+            }
+        } catch (e: Exception) {
+            Log.e("Exception", e.toString())
+            createBitmap(
+                width = DEFAULT_IMAGE_WIDTH,
+                height = DEFAULT_IMAGE_HEIGHT,
+                config = Bitmap.Config.ARGB_8888
+            )
+        }
+    }
+
+    private fun saveImageFile(bitmap: Bitmap, fileName: String) {
+        requireContext().openFileOutput(fileName, Context.MODE_PRIVATE).use {
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, it)
+        }
+    }
+
     @Composable
     fun LayoutContent() {
         Column(verticalArrangement = Arrangement.Center) {
             val imageState by homeViewModel.imageState.observeAsState()
-            imageState?.let { ImageContent(image = it) }
+            imageState?.let {
+                Image(
+                    bitmap = it,
+                    contentDescription = null,
+                    modifier = Modifier.size(DEFAULT_IMAGE_WIDTH.dp, DEFAULT_IMAGE_HEIGHT.dp),
+                )
+            }
+
             Button(
                 onClick = {
                     val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
@@ -143,32 +170,37 @@ class HomeFragment : Fragment(), ImageProcessingListener {
             ) {
                 Text(text = getString(R.string.button_change_image))
             }
-            Button(
-                onClick = {
-                    startService(NotificationState.CANCEL_IMAGE)
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(PADDING_BUTTON)
-            ) {
-                Text(text = "通知欄への表示を解除")
+
+            val notificationState by homeViewModel.notificationState.observeAsState()
+            notificationState?.let {
+                Button(
+                    onClick = {
+                        isNotifying = !isNotifying
+                        homeViewModel.changeText(isNotifying)
+                        if (isNotifying) {
+                            val imageFileName =
+                                PreferenceManager.getDefaultSharedPreferences(requireContext())
+                                    .getString(SharedPreferenceKey.ImageFileName.name, "")
+                            imageFileName?.let { fileName ->
+                                startService(fileName, NotificationState.PIN_IMAGE)
+                            }
+                        } else {
+                            startService(NotificationState.CANCEL_IMAGE)
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(PADDING_BUTTON)
+                ) {
+                    Text(text = it)
+                }
             }
         }
-    }
-
-    @Composable
-    private fun ImageContent(image: ImageBitmap) {
-        Image(
-            bitmap = image,
-            contentDescription = null,
-            modifier = Modifier.size(DEFAULT_IMAGE_WIDTH.dp, DEFAULT_IMAGE_HEIGHT.dp),
-        )
     }
 
     companion object {
         private const val DEFAULT_IMAGE_WIDTH = 512
         private const val DEFAULT_IMAGE_HEIGHT = 512
-        private val MARGIN_BUTTON = 12.dp
         private val PADDING_BUTTON = 12.dp
     }
 }
