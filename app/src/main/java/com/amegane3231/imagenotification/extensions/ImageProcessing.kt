@@ -1,6 +1,7 @@
 package com.amegane3231.imagenotification.extensions
 
 import android.graphics.Bitmap
+import android.graphics.Canvas
 import android.graphics.Color
 import android.util.DisplayMetrics
 
@@ -10,6 +11,10 @@ private const val HDPI_SIZE = 72
 private const val XHDPI_SIZE = 96
 private const val XXHDPI_SIZE = 144
 private const val XXXHDPI_SIZE = 192
+private const val BLEND_IMAGE_WIDTH = 80F
+private const val BLEND_IMAGE_HEIGHT = 80F
+private const val ICON_WIDTH = 128
+private const val ICON_HEIGHT = 128
 
 fun Bitmap.rgbToGray(): Bitmap {
     val width = this.width
@@ -20,7 +25,7 @@ fun Bitmap.rgbToGray(): Bitmap {
             val rgb = this.getPixel(i, j)
             val gray =
                 (Color.red(rgb) * 0.3 + Color.green(rgb) * 0.59 + Color.blue(rgb) * 0.11).toInt()
-            outputImage.setPixel(i, j, Color.rgb(gray, gray, gray))
+            outputImage.setPixel(i, j, Color.argb(Color.alpha(rgb), gray, gray, gray))
         }
     }
     return outputImage
@@ -47,20 +52,33 @@ fun Bitmap.resize(densityDpi: Int): Bitmap {
 }
 
 fun Bitmap.createAlphaImage(): Bitmap {
-    val thisInstance = Bitmap.createBitmap(this)
-    val width = thisInstance.width
-    val height = thisInstance.height
+    val bitmap = Bitmap.createBitmap(this)
+    val width = bitmap.width
+    val height = bitmap.height
     for (j in 0 until height) {
         for (i in 0 until width) {
-            val pixel = thisInstance.getPixel(i, j)
+            val pixel = bitmap.getPixel(i, j)
             val red = Color.red(pixel)
             val green = Color.green(pixel)
             val blue = Color.blue(pixel)
 
             if (red == 0 && green == 0 && blue == 0) {
-                thisInstance.setPixel(i, j, Color.argb(0, 0, 0, 0))
+                bitmap.setPixel(i, j, Color.argb(0, 0, 0, 0))
             }
         }
     }
-    return thisInstance
+    return bitmap
+}
+
+fun Bitmap.createIconImage() : Bitmap {
+    val resizeScale = if (this.width >= this.height) {
+        BLEND_IMAGE_WIDTH / this.width
+    } else {
+        BLEND_IMAGE_HEIGHT / this.height
+    }
+    val iconImage = this.resize((this.width * resizeScale).toInt(), (this.height * resizeScale).toInt())
+    val iconBase = Bitmap.createBitmap(ICON_WIDTH, ICON_HEIGHT, Bitmap.Config.ARGB_8888)
+    val canvas = Canvas(iconBase)
+    canvas.drawBitmap(iconImage, (iconBase.width - iconImage.width) / 2F, (iconBase.height - iconImage.height) / 2F, null)
+    return iconBase
 }
