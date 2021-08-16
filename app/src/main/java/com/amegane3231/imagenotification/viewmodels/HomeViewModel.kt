@@ -14,6 +14,9 @@ class HomeViewModel : ViewModel() {
     private var _notificationState = MutableLiveData<StringResource>()
     val notificationState: LiveData<StringResource>
         get() = _notificationState
+    private var _fileNameLiveData = MutableLiveData<String>()
+    val fileNameLiveData: LiveData<String>
+        get() = _fileNameLiveData
 
     fun setImage(imageBitmap: ImageBitmap) {
         _imageState.value = imageBitmap
@@ -21,9 +24,13 @@ class HomeViewModel : ViewModel() {
 
     fun changeText(isNotifying: Boolean) {
         _notificationState.value = if (isNotifying) {
-            StringResource.create(R.string.text_release_notification)
+            StringResource.create(R.string.text_displaying_notification)
         } else {
             StringResource.create(R.string.text_display_notification)
         }
+    }
+
+    fun changeFileName(fileName: String) {
+        _fileNameLiveData.value = fileName
     }
 }

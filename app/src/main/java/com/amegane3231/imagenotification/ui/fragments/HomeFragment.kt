@@ -5,6 +5,8 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Canvas
+import android.graphics.drawable.VectorDrawable
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
@@ -13,8 +15,10 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.Button
+import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -24,12 +28,15 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.unit.dp
 import androidx.core.content.edit
+import androidx.core.content.res.ResourcesCompat
 import androidx.core.graphics.createBitmap
 import androidx.fragment.app.Fragment
 import androidx.preference.PreferenceManager
 import com.amegane3231.imagenotification.R
 import com.amegane3231.imagenotification.data.NotificationState
 import com.amegane3231.imagenotification.data.SharedPreferenceKey
+import com.amegane3231.imagenotification.extensions.createAlphaImage
+import com.amegane3231.imagenotification.extensions.rgbToGray
 import com.amegane3231.imagenotification.service.ForeGroundService
 import com.amegane3231.imagenotification.viewmodels.HomeViewModel
 import kotlinx.coroutines.CoroutineScope
@@ -49,15 +56,18 @@ class HomeFragment : Fragment() {
                 val notificationState = NotificationState.PIN_IMAGE
                 val date = LocalDateTime.now()
                 val formatter = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss")
-                val fileName = "${formatter.format(date)}.jpg"
+                val fileName = "${formatter.format(date)}.png"
                 PreferenceManager.getDefaultSharedPreferences(requireContext()).edit {
                     putString(SharedPreferenceKey.ImageFileName.name, fileName)
                 }
                 val iconImage = getBitmap(uri)
-                homeViewModel.setImage(iconImage.asImageBitmap())
-                isNotifying = true
-                homeViewModel.changeText(isNotifying)
                 saveImageFile(iconImage, fileName)
+                isNotifying = true
+                homeViewModel.apply {
+                    setImage(iconImage.asImageBitmap())
+                    changeFileName(fileName)
+                    changeText(isNotifying)
+                }
                 startService(fileName, notificationState)
             }
         }
@@ -70,6 +80,7 @@ class HomeFragment : Fragment() {
             .getString(SharedPreferenceKey.ImageFileName.name, "")
         imageFileName?.let {
             homeViewModel.setImage(getBitmap(it).asImageBitmap())
+            homeViewModel.changeFileName(it)
             startService(it, NotificationState.PIN_IMAGE)
             isNotifying = true
         }
@@ -137,7 +148,10 @@ class HomeFragment : Fragment() {
 
     private fun saveImageFile(bitmap: Bitmap, fileName: String) {
         requireContext().openFileOutput(fileName, Context.MODE_PRIVATE).use {
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, it)
+            val bitmapInstance = Bitmap.createBitmap(bitmap)
+            val grayImage = bitmapInstance.rgbToGray()
+            val iconImage = grayImage.createAlphaImage()
+            iconImage.compress(Bitmap.CompressFormat.PNG, 100, it)
         }
     }
 
@@ -145,41 +159,35 @@ class HomeFragment : Fragment() {
     fun LayoutContent() {
         Column(verticalArrangement = Arrangement.Center) {
             val imageState by homeViewModel.imageState.observeAsState()
-            imageState?.let {
-                Image(
-                    bitmap = it,
-                    contentDescription = null,
-                    modifier = Modifier.size(DEFAULT_IMAGE_WIDTH.dp, DEFAULT_IMAGE_HEIGHT.dp),
-                )
-            }
-
-            Button(
-                onClick = {
-                    val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
-                        addCategory(Intent.CATEGORY_OPENABLE)
-                        type = "image/png"
-                    }
-                    if (intent.resolveActivity(requireContext().packageManager) != null) {
-                        getImageContent.launch(intent)
-                    }
-                },
+            Image(
+                bitmap = imageState ?: createBitmap(
+                    width = DEFAULT_IMAGE_WIDTH,
+                    height = DEFAULT_IMAGE_HEIGHT,
+                    config = Bitmap.Config.ARGB_8888
+                ).asImageBitmap(),
+                contentDescription = null,
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(PADDING_BUTTON)
-            ) {
-                Text(text = getString(R.string.button_change_image))
-            }
+                    .size(DEFAULT_IMAGE_WIDTH.dp, DEFAULT_IMAGE_HEIGHT.dp)
+                    .clickable {
+                        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+                            addCategory(Intent.CATEGORY_OPENABLE)
+                            type = "image/png"
+                        }
+                        if (intent.resolveActivity(requireContext().packageManager) != null) {
+                            getImageContent.launch(intent)
+                        }
+                    },
+            )
 
             val notificationState by homeViewModel.notificationState.observeAsState()
             notificationState?.let {
-                Button(
+                IconButton(
                     onClick = {
                         isNotifying = !isNotifying
                         homeViewModel.changeText(isNotifying)
                         if (isNotifying) {
                             val imageFileName =
-                                PreferenceManager.getDefaultSharedPreferences(requireContext())
-                                    .getString(SharedPreferenceKey.ImageFileName.name, "")
+                                homeViewModel.fileNameLiveData.value
                             imageFileName?.let { fileName ->
                                 startService(fileName, NotificationState.PIN_IMAGE)
                             }
@@ -189,9 +197,32 @@ class HomeFragment : Fragment() {
                     },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(PADDING_BUTTON)
+                        .padding(PADDING_BUTTON),
                 ) {
-                    Text(text = it.getString(requireContext()))
+                    Row {
+                        val buttonIconDrawable = if (isNotifying) {
+                            ResourcesCompat.getDrawable(
+                                resources,
+                                R.drawable.ic_pin,
+                                null
+                            ) as VectorDrawable
+                        } else {
+                            ResourcesCompat.getDrawable(
+                                resources,
+                                R.drawable.ic_pin_not,
+                                null
+                            ) as VectorDrawable
+                        }
+                        val bitmap = Bitmap.createBitmap(
+                            buttonIconDrawable.intrinsicWidth,
+                            buttonIconDrawable.intrinsicHeight, Bitmap.Config.ARGB_8888
+                        )
+                        val canvas = Canvas(bitmap)
+                        buttonIconDrawable.setBounds(0, 0, canvas.width, canvas.height)
+                        buttonIconDrawable.draw(canvas)
+                        Icon(bitmap = bitmap.asImageBitmap(), contentDescription = "set")
+                        Text(text = " ${it.getString(requireContext())}")
+                    }
                 }
             }
         }

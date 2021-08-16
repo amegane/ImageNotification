@@ -17,8 +17,6 @@ import androidx.core.graphics.*
 import androidx.core.graphics.drawable.IconCompat
 import com.amegane3231.imagenotification.R
 import com.amegane3231.imagenotification.data.NotificationState
-import com.amegane3231.imagenotification.extensions.createAlphaImage
-import com.amegane3231.imagenotification.extensions.rgbToGray
 import java.io.IOException
 
 class ForeGroundService : Service() {
@@ -43,10 +41,7 @@ class ForeGroundService : Service() {
             fileName?.let {
                 try {
                     applicationContext.openFileInput(it).use { stream ->
-                        val bitmap = BitmapFactory.decodeStream(stream)
-                        val bitmapInstance = Bitmap.createBitmap(bitmap)
-                        val grayImage = bitmapInstance.rgbToGray()
-                        val iconImage = grayImage.createAlphaImage()
+                        val iconImage = BitmapFactory.decodeStream(stream)
                         setSmallIcon(IconCompat.createFromIcon(this@ForeGroundService, Icon.createWithAdaptiveBitmap(iconImage))!!)
                     }
                 } catch (e: Exception) {
