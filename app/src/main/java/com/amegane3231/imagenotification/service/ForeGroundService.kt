@@ -8,6 +8,7 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.BitmapFactory
 import android.graphics.drawable.Icon
+import android.os.Build
 import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
@@ -23,13 +24,15 @@ class ForeGroundService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         val name = getString((R.string.app_name))
-        val descriptionText = ""
-        val importance = NotificationManager.IMPORTANCE_LOW
-        val channel = NotificationChannel(CHANNEL_ID, name, importance)
-        channel.description = descriptionText
-        manager.createNotificationChannel(channel)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            val descriptionText = ""
+            val importance = NotificationManager.IMPORTANCE_LOW
+            val channel = NotificationChannel(CHANNEL_ID, name, importance)
+            channel.description = descriptionText
+            manager.createNotificationChannel(channel)
+        }
 
         val pendingIntent = NavDeepLinkBuilder(this.applicationContext)
             .setGraph(R.navigation.nav_graph)

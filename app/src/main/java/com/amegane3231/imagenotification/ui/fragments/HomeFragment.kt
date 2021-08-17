@@ -42,8 +42,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
+import java.text.SimpleDateFormat
+import java.util.*
 
 class HomeFragment : Fragment() {
     private val homeViewModel: HomeViewModel by lazy { HomeViewModel() }
@@ -53,8 +53,8 @@ class HomeFragment : Fragment() {
             if (it.resultCode == Activity.RESULT_OK && it.data?.data != null) {
                 val uri = it.data?.data!!
                 val notificationState = NotificationState.PIN_IMAGE
-                val date = LocalDateTime.now()
-                val formatter = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss")
+                val date = Date()
+                val formatter = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault())
                 val fileName = "${formatter.format(date)}.png"
                 PreferenceManager.getDefaultSharedPreferences(requireContext()).edit {
                     putString(SharedPreferenceKey.ImageFileName.name, fileName)
@@ -98,7 +98,7 @@ class HomeFragment : Fragment() {
                 putExtra("fileName", fileName)
                 putExtra("notificationState", notificationState)
             }
-            requireContext().startForegroundService(intent)
+            requireContext().startService(intent)
         }
     }
 
@@ -108,7 +108,7 @@ class HomeFragment : Fragment() {
             val intent = Intent(requireContext(), ForeGroundService::class.java).apply {
                 putExtra("notificationState", notificationState)
             }
-            requireContext().startForegroundService(intent)
+            requireContext().startService(intent)
         }
     }
 
