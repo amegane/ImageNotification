@@ -13,11 +13,13 @@
         <item name="android:statusBarColor" tools:targetApi="l">@color/black</item>
         <!-- Customize your theme here. -->
     </style>
+
     <style name="Theme.ImageNotification.NoActionBar">
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
     </style>
-    <style name="Theme.ImageNotification.AppBarOverlay"
-        parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
+
+    <style name="Theme.ImageNotification.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
+
     <style name="Theme.ImageNotification.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
 </resources>

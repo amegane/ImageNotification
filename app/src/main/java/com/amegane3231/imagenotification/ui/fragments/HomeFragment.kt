@@ -33,6 +33,7 @@ import androidx.core.graphics.createBitmap
 import androidx.fragment.app.Fragment
 import androidx.preference.PreferenceManager
 import com.amegane3231.imagenotification.R
+import com.amegane3231.imagenotification.data.AppLaunchState
 import com.amegane3231.imagenotification.data.NotificationState
 import com.amegane3231.imagenotification.data.SharedPreferenceKey
 import com.amegane3231.imagenotification.extensions.rgbToGray
@@ -73,6 +74,24 @@ class HomeFragment : Fragment() {
                 startService(iconFileName, notificationState)
             }
         }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        val appLaunchedState = PreferenceManager.getDefaultSharedPreferences(requireContext())
+            .getInt(SharedPreferenceKey.AppLaunchedState.name, AppLaunchState.FirstChoiceImage.state)
+        if (appLaunchedState <= 1) {
+            PreferenceManager.getDefaultSharedPreferences(requireContext()).edit {
+                putInt(SharedPreferenceKey.AppLaunchedState.name, AppLaunchState.FirstChoiceImage.state)
+            }
+            val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+                addCategory(Intent.CATEGORY_OPENABLE)
+                type = "image/png"
+            }
+            if (intent.resolveActivity(requireContext().packageManager) != null) {
+                getImageContent.launch(intent)
+            }
+        }
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
