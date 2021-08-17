@@ -55,19 +55,22 @@ class HomeFragment : Fragment() {
                 val notificationState = NotificationState.PIN_IMAGE
                 val date = LocalDateTime.now()
                 val formatter = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss")
-                val fileName = "${formatter.format(date)}.png"
+                val imageFileName = "image_${formatter.format(date)}.png"
+                val iconFileName = "icon_${formatter.format(date)}.png"
                 PreferenceManager.getDefaultSharedPreferences(requireContext()).edit {
-                    putString(SharedPreferenceKey.ImageFileName.name, fileName)
+                    putString(SharedPreferenceKey.ImageFileName.name, imageFileName)
+                    putString(SharedPreferenceKey.IconFileName.name, iconFileName)
                 }
                 val iconImage = getBitmap(uri)
-                saveIconFile(iconImage, fileName)
+                saveImageFile(iconImage, imageFileName)
+                saveIconFile(iconImage, iconFileName)
                 isNotifying = true
                 homeViewModel.apply {
                     setImage(iconImage.asImageBitmap())
-                    changeFileName(fileName)
+                    changeFileName(iconFileName)
                     changeText(isNotifying)
                 }
-                startService(fileName, notificationState)
+                startService(iconFileName, notificationState)
             }
         }
 
@@ -75,13 +78,17 @@ class HomeFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
+        val iconFileName = PreferenceManager.getDefaultSharedPreferences(requireContext())
+            .getString(SharedPreferenceKey.IconFileName.name, "")
+        iconFileName?.let {
+            homeViewModel.changeFileName(it)
+            startService(it, NotificationState.PIN_IMAGE)
+            isNotifying = true
+        }
         val imageFileName = PreferenceManager.getDefaultSharedPreferences(requireContext())
             .getString(SharedPreferenceKey.ImageFileName.name, "")
         imageFileName?.let {
             homeViewModel.setImage(getBitmap(it).asImageBitmap())
-            homeViewModel.changeFileName(it)
-            startService(it, NotificationState.PIN_IMAGE)
-            isNotifying = true
         }
         homeViewModel.changeText(isNotifying)
         return ComposeView(inflater.context).apply {
@@ -142,6 +149,13 @@ class HomeFragment : Fragment() {
                 height = DEFAULT_IMAGE_HEIGHT,
                 config = Bitmap.Config.ARGB_8888
             )
+        }
+    }
+
+    private fun saveImageFile(bitmap: Bitmap, fileName: String) {
+        requireContext().openFileOutput(fileName, Context.MODE_PRIVATE).use {
+            val image = Bitmap.createBitmap(bitmap)
+            image.compress(Bitmap.CompressFormat.PNG, 100, it)
         }
     }
 
