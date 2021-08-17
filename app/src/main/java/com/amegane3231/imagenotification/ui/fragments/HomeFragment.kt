@@ -17,12 +17,14 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.Button
+import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Icon
-import androidx.compose.material.IconButton
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.ComposeView
@@ -169,7 +171,7 @@ class HomeFragment : Fragment() {
 
     @Composable
     fun LayoutContent() {
-        Column(verticalArrangement = Arrangement.Center) {
+        Column(verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
             val imageState by homeViewModel.imageState.observeAsState()
             Image(
                 bitmap = imageState ?: createBitmap(
@@ -193,7 +195,7 @@ class HomeFragment : Fragment() {
 
             val notificationState by homeViewModel.notificationState.observeAsState()
             notificationState?.let {
-                IconButton(
+                Button(
                     onClick = {
                         isNotifying = !isNotifying
                         homeViewModel.changeText(isNotifying)
@@ -208,36 +210,38 @@ class HomeFragment : Fragment() {
                         }
                     },
                     modifier = Modifier
-                        .fillMaxWidth()
                         .padding(PADDING_BUTTON),
                 ) {
-                    Row {
-                        val buttonIconDrawable = if (isNotifying) {
-                            ResourcesCompat.getDrawable(
-                                resources,
-                                R.drawable.ic_pin,
-                                null
-                            ) as VectorDrawable
-                        } else {
-                            ResourcesCompat.getDrawable(
-                                resources,
-                                R.drawable.ic_pin_not,
-                                null
-                            ) as VectorDrawable
-                        }
-                        val bitmap = Bitmap.createBitmap(
-                            buttonIconDrawable.intrinsicWidth,
-                            buttonIconDrawable.intrinsicHeight, Bitmap.Config.ARGB_8888
-                        )
-                        val canvas = Canvas(bitmap)
-                        buttonIconDrawable.setBounds(0, 0, canvas.width, canvas.height)
-                        buttonIconDrawable.draw(canvas)
-                        Icon(bitmap = bitmap.asImageBitmap(), contentDescription = "set")
-                        Text(text = " ${it.getString(requireContext())}")
-                    }
+                    Icon(bitmap = createButtonBitmap().asImageBitmap(), contentDescription = null, modifier = Modifier.size(ButtonDefaults.IconSize))
+                    Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+                    Text(text = " ${it.getString(requireContext())}")
                 }
             }
         }
+    }
+
+    private fun createButtonBitmap() : Bitmap{
+        val buttonIconDrawable = if (isNotifying) {
+            ResourcesCompat.getDrawable(
+                resources,
+                R.drawable.ic_pin,
+                null
+            ) as VectorDrawable
+        } else {
+            ResourcesCompat.getDrawable(
+                resources,
+                R.drawable.ic_pin_not,
+                null
+            ) as VectorDrawable
+        }
+        val bitmap = Bitmap.createBitmap(
+            buttonIconDrawable.intrinsicWidth,
+            buttonIconDrawable.intrinsicHeight, Bitmap.Config.ARGB_8888
+        )
+        val canvas = Canvas(bitmap)
+        buttonIconDrawable.setBounds(0, 0, canvas.width, canvas.height)
+        buttonIconDrawable.draw(canvas)
+        return bitmap
     }
 
     companion object {

@@ -24,9 +24,9 @@ class HomeViewModel : ViewModel() {
 
     fun changeText(isNotifying: Boolean) {
         _notificationState.value = if (isNotifying) {
-            StringResource.create(R.string.text_displaying_notification)
-        } else {
             StringResource.create(R.string.text_display_notification)
+        } else {
+            StringResource.create(R.string.text_release_notification)
         }
     }
 
