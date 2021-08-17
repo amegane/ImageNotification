@@ -6,10 +6,8 @@ import android.app.NotificationManager
 import android.app.Service
 import android.content.Context
 import android.content.Intent
-import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.drawable.Icon
-import android.net.Uri
 import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
@@ -17,7 +15,6 @@ import androidx.core.graphics.*
 import androidx.core.graphics.drawable.IconCompat
 import com.amegane3231.imagenotification.R
 import com.amegane3231.imagenotification.data.NotificationState
-import java.io.IOException
 
 class ForeGroundService : Service() {
     override fun onBind(intent: Intent?): IBinder? {
@@ -42,7 +39,7 @@ class ForeGroundService : Service() {
                 try {
                     applicationContext.openFileInput(it).use { stream ->
                         val iconImage = BitmapFactory.decodeStream(stream)
-                        setSmallIcon(IconCompat.createFromIcon(this@ForeGroundService, Icon.createWithAdaptiveBitmap(iconImage))!!)
+                        setSmallIcon(IconCompat.createFromIcon(this@ForeGroundService, Icon.createWithBitmap(iconImage))!!)
                     }
                 } catch (e: Exception) {
                     Log.e("Exception", e.toString())
@@ -61,18 +58,6 @@ class ForeGroundService : Service() {
             }
         }
         return START_STICKY
-    }
-
-    private fun getBitmap(uri: Uri): Bitmap? {
-        return try {
-            val bitmap =
-                applicationContext.contentResolver.openFileDescriptor(uri, "r").use {
-                    BitmapFactory.decodeFileDescriptor(it?.fileDescriptor)
-                }
-            bitmap
-        } catch (e: IOException) {
-            return null
-        }
     }
 
     companion object {

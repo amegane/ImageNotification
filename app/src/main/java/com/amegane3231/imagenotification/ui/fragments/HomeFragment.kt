@@ -35,7 +35,6 @@ import androidx.preference.PreferenceManager
 import com.amegane3231.imagenotification.R
 import com.amegane3231.imagenotification.data.NotificationState
 import com.amegane3231.imagenotification.data.SharedPreferenceKey
-import com.amegane3231.imagenotification.extensions.createIconImage
 import com.amegane3231.imagenotification.extensions.rgbToGray
 import com.amegane3231.imagenotification.service.ForeGroundService
 import com.amegane3231.imagenotification.viewmodels.HomeViewModel
@@ -149,8 +148,7 @@ class HomeFragment : Fragment() {
     private fun saveIconFile(bitmap: Bitmap, fileName: String) {
         requireContext().openFileOutput(fileName, Context.MODE_PRIVATE).use {
             val bitmapInstance = Bitmap.createBitmap(bitmap)
-            val grayImage = bitmapInstance.rgbToGray()
-            val iconImage = grayImage.createIconImage()
+            val iconImage = bitmapInstance.rgbToGray()
             iconImage.compress(Bitmap.CompressFormat.PNG, 100, it)
         }
     }
