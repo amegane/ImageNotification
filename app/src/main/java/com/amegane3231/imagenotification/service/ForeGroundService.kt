@@ -13,6 +13,7 @@ import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.graphics.*
 import androidx.core.graphics.drawable.IconCompat
+import androidx.navigation.NavDeepLinkBuilder
 import com.amegane3231.imagenotification.R
 import com.amegane3231.imagenotification.data.NotificationState
 
@@ -30,6 +31,11 @@ class ForeGroundService : Service() {
         channel.description = descriptionText
         manager.createNotificationChannel(channel)
 
+        val pendingIntent = NavDeepLinkBuilder(this.applicationContext)
+            .setGraph(R.navigation.nav_graph)
+            .setDestination(R.id.homeFragment)
+            .createPendingIntent()
+
         val notification = NotificationCompat.Builder(this, CHANNEL_ID).apply {
             setContentTitle(name)
             priority = NotificationCompat.PRIORITY_DEFAULT
@@ -45,6 +51,7 @@ class ForeGroundService : Service() {
                     Log.e("Exception", e.toString())
                 }
             }
+            setContentIntent(pendingIntent)
         }.build()
         notification.flags = Notification.FLAG_ONGOING_EVENT
 
