@@ -17,9 +17,9 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Icon
+import androidx.compose.material.OutlinedButton
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -39,6 +39,8 @@ import com.amegane3231.imagenotification.data.NotificationState
 import com.amegane3231.imagenotification.data.SharedPreferenceKey
 import com.amegane3231.imagenotification.extensions.rgbToGray
 import com.amegane3231.imagenotification.service.ForeGroundService
+import com.amegane3231.imagenotification.ui.theme.Black
+import com.amegane3231.imagenotification.ui.theme.White
 import com.amegane3231.imagenotification.viewmodels.HomeViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -195,7 +197,7 @@ class HomeFragment : Fragment() {
 
             val notificationState by homeViewModel.notificationState.observeAsState()
             notificationState?.let {
-                Button(
+                OutlinedButton(
                     onClick = {
                         isNotifying = !isNotifying
                         homeViewModel.changeText(isNotifying)
@@ -211,6 +213,7 @@ class HomeFragment : Fragment() {
                     },
                     modifier = Modifier
                         .padding(PADDING_BUTTON),
+                    colors = ButtonDefaults.outlinedButtonColors(backgroundColor = White, contentColor = Black)
                 ) {
                     Icon(bitmap = createButtonBitmap().asImageBitmap(), contentDescription = null, modifier = Modifier.size(ButtonDefaults.IconSize))
                     Spacer(Modifier.size(ButtonDefaults.IconSpacing))
