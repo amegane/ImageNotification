@@ -9,39 +9,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.amegane3231.imagenotification.ui.theme.White
 
 @Composable
 fun AppBar(title: String) {
-//    TopAppBar(
-//        title = { Text(title) },
-//        navigationIcon = {
-//            IconButton(onClick = { /* do something */ }) {
-//                Icon(Icons.Filled.Menu, contentDescription = "Open drawer")
-//            }
-//        },
-//        actions = {
-//            IconButton(onClick = { /* do something */ }) {
-//                Icon(Icons.Filled.Edit, contentDescription = "Edit text")
-//            }
-//            IconButton(onClick = { /* do something */ }) {
-//                Icon(Icons.Filled.Share, contentDescription = "Share text")
-//            }
-//        }
-//    )
-    val titleIconModifier = Modifier.fillMaxHeight()
-        .width(72.dp - 4.dp)
-
     TopAppBar(
-        backgroundColor = White,
         elevation = 0.dp,
-        modifier= Modifier.fillMaxWidth()) {
-
-        //TopAppBar Content
+        modifier = Modifier.fillMaxWidth()
+    ) {
         Box(Modifier.height(32.dp)) {
-
-            //Navigation Icon
-            Row(titleIconModifier, verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                Modifier
+                    .fillMaxHeight()
+                    .width(72.dp - 4.dp), verticalAlignment = Alignment.CenterVertically
+            ) {
                 CompositionLocalProvider(
                     LocalContentAlpha provides ContentAlpha.high,
                 ) {
@@ -57,14 +37,14 @@ fun AppBar(title: String) {
                 }
             }
 
-            //Title
-            Row(Modifier.fillMaxSize(),
-                verticalAlignment = Alignment.CenterVertically) {
-
+            Row(
+                Modifier.fillMaxSize(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 ProvideTextStyle(value = MaterialTheme.typography.h6) {
                     CompositionLocalProvider(
                         LocalContentAlpha provides ContentAlpha.high,
-                    ){
+                    ) {
                         Text(
                             modifier = Modifier.fillMaxWidth(),
                             textAlign = TextAlign.Center,
@@ -75,7 +55,6 @@ fun AppBar(title: String) {
                 }
             }
 
-            //actions
             CompositionLocalProvider(LocalContentAlpha provides ContentAlpha.medium) {
                 Row(
                     Modifier.fillMaxHeight(),
