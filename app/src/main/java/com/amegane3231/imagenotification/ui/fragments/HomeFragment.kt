@@ -17,14 +17,12 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Icon
-import androidx.compose.material.OutlinedButton
+import androidx.compose.material.IconButton
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.ComposeView
@@ -39,15 +37,13 @@ import com.amegane3231.imagenotification.data.NotificationState
 import com.amegane3231.imagenotification.data.SharedPreferenceKey
 import com.amegane3231.imagenotification.extensions.rgbToGray
 import com.amegane3231.imagenotification.service.ForeGroundService
-import com.amegane3231.imagenotification.ui.theme.Black
-import com.amegane3231.imagenotification.ui.theme.White
 import com.amegane3231.imagenotification.viewmodels.HomeViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
+import java.text.SimpleDateFormat
+import java.util.*
 
 class HomeFragment : Fragment() {
     private val homeViewModel: HomeViewModel by lazy { HomeViewModel() }
@@ -57,24 +53,21 @@ class HomeFragment : Fragment() {
             if (it.resultCode == Activity.RESULT_OK && it.data?.data != null) {
                 val uri = it.data?.data!!
                 val notificationState = NotificationState.PIN_IMAGE
-                val date = LocalDateTime.now()
-                val formatter = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss")
-                val imageFileName = "image_${formatter.format(date)}.png"
-                val iconFileName = "icon_${formatter.format(date)}.png"
+                val date = Date()
+                val formatter = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault())
+                val fileName = "${formatter.format(date)}.png"
                 PreferenceManager.getDefaultSharedPreferences(requireContext()).edit {
-                    putString(SharedPreferenceKey.ImageFileName.name, imageFileName)
-                    putString(SharedPreferenceKey.IconFileName.name, iconFileName)
+                    putString(SharedPreferenceKey.ImageFileName.name, fileName)
                 }
                 val iconImage = getBitmap(uri)
-                saveImageFile(iconImage, imageFileName)
-                saveIconFile(iconImage, iconFileName)
+                saveIconFile(iconImage, fileName)
                 isNotifying = true
                 homeViewModel.apply {
                     setImage(iconImage.asImageBitmap())
-                    changeFileName(iconFileName)
+                    changeFileName(fileName)
                     changeText(isNotifying)
                 }
-                startService(iconFileName, notificationState)
+                startService(fileName, notificationState)
             }
         }
 
@@ -82,17 +75,13 @@ class HomeFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        val iconFileName = PreferenceManager.getDefaultSharedPreferences(requireContext())
-            .getString(SharedPreferenceKey.IconFileName.name, "")
-        iconFileName?.let {
-            homeViewModel.changeFileName(it)
-            startService(it, NotificationState.PIN_IMAGE)
-            isNotifying = true
-        }
         val imageFileName = PreferenceManager.getDefaultSharedPreferences(requireContext())
             .getString(SharedPreferenceKey.ImageFileName.name, "")
         imageFileName?.let {
             homeViewModel.setImage(getBitmap(it).asImageBitmap())
+            homeViewModel.changeFileName(it)
+            startService(it, NotificationState.PIN_IMAGE)
+            isNotifying = true
         }
         homeViewModel.changeText(isNotifying)
         return ComposeView(inflater.context).apply {
@@ -109,7 +98,7 @@ class HomeFragment : Fragment() {
                 putExtra("fileName", fileName)
                 putExtra("notificationState", notificationState)
             }
-            requireContext().startForegroundService(intent)
+            requireContext().startService(intent)
         }
     }
 
@@ -119,7 +108,7 @@ class HomeFragment : Fragment() {
             val intent = Intent(requireContext(), ForeGroundService::class.java).apply {
                 putExtra("notificationState", notificationState)
             }
-            requireContext().startForegroundService(intent)
+            requireContext().startService(intent)
         }
     }
 
@@ -156,13 +145,6 @@ class HomeFragment : Fragment() {
         }
     }
 
-    private fun saveImageFile(bitmap: Bitmap, fileName: String) {
-        requireContext().openFileOutput(fileName, Context.MODE_PRIVATE).use {
-            val image = Bitmap.createBitmap(bitmap)
-            image.compress(Bitmap.CompressFormat.PNG, 100, it)
-        }
-    }
-
     private fun saveIconFile(bitmap: Bitmap, fileName: String) {
         requireContext().openFileOutput(fileName, Context.MODE_PRIVATE).use {
             val bitmapInstance = Bitmap.createBitmap(bitmap)
@@ -173,7 +155,7 @@ class HomeFragment : Fragment() {
 
     @Composable
     fun LayoutContent() {
-        Column(verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
+        Column(verticalArrangement = Arrangement.Center) {
             val imageState by homeViewModel.imageState.observeAsState()
             Image(
                 bitmap = imageState ?: createBitmap(
@@ -197,7 +179,7 @@ class HomeFragment : Fragment() {
 
             val notificationState by homeViewModel.notificationState.observeAsState()
             notificationState?.let {
-                OutlinedButton(
+                IconButton(
                     onClick = {
                         isNotifying = !isNotifying
                         homeViewModel.changeText(isNotifying)
@@ -212,39 +194,36 @@ class HomeFragment : Fragment() {
                         }
                     },
                     modifier = Modifier
+                        .fillMaxWidth()
                         .padding(PADDING_BUTTON),
-                    colors = ButtonDefaults.outlinedButtonColors(backgroundColor = White, contentColor = Black)
                 ) {
-                    Icon(bitmap = createButtonBitmap().asImageBitmap(), contentDescription = null, modifier = Modifier.size(ButtonDefaults.IconSize))
-                    Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-                    Text(text = " ${it.getString(requireContext())}")
+                    Row {
+                        val buttonIconDrawable = if (isNotifying) {
+                            ResourcesCompat.getDrawable(
+                                resources,
+                                R.drawable.ic_pin,
+                                null
+                            ) as VectorDrawable
+                        } else {
+                            ResourcesCompat.getDrawable(
+                                resources,
+                                R.drawable.ic_pin_not,
+                                null
+                            ) as VectorDrawable
+                        }
+                        val bitmap = Bitmap.createBitmap(
+                            buttonIconDrawable.intrinsicWidth,
+                            buttonIconDrawable.intrinsicHeight, Bitmap.Config.ARGB_8888
+                        )
+                        val canvas = Canvas(bitmap)
+                        buttonIconDrawable.setBounds(0, 0, canvas.width, canvas.height)
+                        buttonIconDrawable.draw(canvas)
+                        Icon(bitmap = bitmap.asImageBitmap(), contentDescription = "set")
+                        Text(text = " ${it.getString(requireContext())}")
+                    }
                 }
             }
         }
-    }
-
-    private fun createButtonBitmap() : Bitmap{
-        val buttonIconDrawable = if (isNotifying) {
-            ResourcesCompat.getDrawable(
-                resources,
-                R.drawable.ic_pin,
-                null
-            ) as VectorDrawable
-        } else {
-            ResourcesCompat.getDrawable(
-                resources,
-                R.drawable.ic_pin_not,
-                null
-            ) as VectorDrawable
-        }
-        val bitmap = Bitmap.createBitmap(
-            buttonIconDrawable.intrinsicWidth,
-            buttonIconDrawable.intrinsicHeight, Bitmap.Config.ARGB_8888
-        )
-        val canvas = Canvas(bitmap)
-        buttonIconDrawable.setBounds(0, 0, canvas.width, canvas.height)
-        buttonIconDrawable.draw(canvas)
-        return bitmap
     }
 
     companion object {
