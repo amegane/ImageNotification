@@ -9,10 +9,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.amegane3231.imagenotification.ui.theme.ImageNotificationTheme
 
 @Composable
 fun AppBar(title: String) {
     TopAppBar(
+        backgroundColor = ImageNotificationTheme.colors.primary,
         elevation = 0.dp,
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -50,6 +52,7 @@ fun AppBar(title: String) {
                             textAlign = TextAlign.Center,
                             maxLines = 1,
                             text = title,
+                            color = ImageNotificationTheme.colors.text
                         )
                     }
                 }

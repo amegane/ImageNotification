@@ -40,8 +40,7 @@ import com.amegane3231.imagenotification.data.NotificationState
 import com.amegane3231.imagenotification.data.SharedPreferenceKey
 import com.amegane3231.imagenotification.extensions.rgbToGray
 import com.amegane3231.imagenotification.service.ForeGroundService
-import com.amegane3231.imagenotification.ui.theme.Black
-import com.amegane3231.imagenotification.ui.theme.White
+import com.amegane3231.imagenotification.ui.theme.ImageNotificationTheme
 import com.amegane3231.imagenotification.viewmodels.HomeViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -82,10 +81,16 @@ class HomeFragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val appLaunchedState = PreferenceManager.getDefaultSharedPreferences(requireContext())
-            .getInt(SharedPreferenceKey.AppLaunchedState.name, AppLaunchState.FirstChoiceImage.state)
+            .getInt(
+                SharedPreferenceKey.AppLaunchedState.name,
+                AppLaunchState.FirstChoiceImage.state
+            )
         if (appLaunchedState <= 1) {
             PreferenceManager.getDefaultSharedPreferences(requireContext()).edit {
-                putInt(SharedPreferenceKey.AppLaunchedState.name, AppLaunchState.FirstChoiceImage.state)
+                putInt(
+                    SharedPreferenceKey.AppLaunchedState.name,
+                    AppLaunchState.FirstChoiceImage.state
+                )
             }
             val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
                 addCategory(Intent.CATEGORY_OPENABLE)
@@ -192,7 +197,10 @@ class HomeFragment : Fragment() {
 
     @Composable
     fun LayoutContent() {
-        Column(verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
+        Column(
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
             val imageState by homeViewModel.imageState.observeAsState()
             Image(
                 bitmap = imageState ?: createBitmap(
@@ -231,8 +239,13 @@ class HomeFragment : Fragment() {
                         }
                     },
                     modifier = Modifier
-                        .padding(PADDING_BUTTON),
-                    colors = ButtonDefaults.outlinedButtonColors(backgroundColor = White, contentColor = Black)
+                        .fillMaxWidth()
+                        .height(80.dp)
+                        .padding(top = 24.dp, start = 24.dp, end = 24.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        backgroundColor = if (isNotifying) ImageNotificationTheme.colors.primary else ImageNotificationTheme.colors.disable,
+                        contentColor = ImageNotificationTheme.colors.text
+                    )
                 ) {
                     Row {
                         val buttonIconDrawable = if (isNotifying) {
@@ -256,7 +269,10 @@ class HomeFragment : Fragment() {
                         buttonIconDrawable.setBounds(0, 0, canvas.width, canvas.height)
                         buttonIconDrawable.draw(canvas)
                         Icon(bitmap = bitmap.asImageBitmap(), contentDescription = "set")
-                        Text(text = " ${it.getString(requireContext())}", modifier = Modifier.padding(top = 2.dp))
+                        Text(
+                            text = " ${it.getString(requireContext())}",
+                            modifier = Modifier.padding(top = 2.dp)
+                        )
                     }
                 }
             }
