@@ -4,8 +4,8 @@
     <string name="text_display_notification">表示</string>
     <string name="text_release_notification">非表示</string>
     <string name="title_activity_tutorial">TutorialActivity</string>
-    <string name="text_app_description">ImageNotificationは好きな透過画像をステータスバーに表示できるアプリです</string>
-    <string name="text_app_description2">ステータスバーには上のように表示されます</string>
-    <string name="text_app_description3">ぜひ、あなたのお気に入りの画像と一緒に過ごしましょう！</string>
+    <string name="text_app_description">ImageNotificationは好きな透過画像を\nステータスバーに表示できるアプリです</string>
+    <string name="text_app_description2">ステータスバーには上のように\n表示されます</string>
+    <string name="text_app_description3">ぜひ、あなたのお気に入りの画像と\n一緒に過ごしましょう！</string>
     <string name="button_start">はじめる</string>
 </resources>

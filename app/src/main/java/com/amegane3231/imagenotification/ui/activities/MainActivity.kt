@@ -4,8 +4,11 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.Scaffold
+import androidx.compose.material.Surface
 import androidx.compose.material.rememberScaffoldState
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.AndroidViewBinding
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
@@ -32,12 +35,18 @@ class MainActivity : AppCompatActivity() {
 
         setContent {
             val scaffoldState = rememberScaffoldState()
-            ImageNotificationTheme {
-                Scaffold(
-                    scaffoldState = scaffoldState,
-                    topBar = { AppBar(getString(R.string.app_name)) },
-                    content = { AndroidViewBinding(ActivityMainBinding::inflate) }
-                )
+            ImageNotificationTheme(
+            ) {
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    color = ImageNotificationTheme.colors.background
+                ) {
+                    Scaffold(
+                        scaffoldState = scaffoldState,
+                        topBar = { AppBar(getString(R.string.app_name)) },
+                        content = { AndroidViewBinding(ActivityMainBinding::inflate) }
+                    )
+                }
             }
         }
     }
