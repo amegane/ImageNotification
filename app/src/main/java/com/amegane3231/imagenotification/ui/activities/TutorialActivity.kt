@@ -44,15 +44,15 @@ class TutorialActivity : ComponentActivity() {
         val imageList = mutableListOf<Bitmap>().apply {
             add(
                 ResourcesCompat.getDrawable(resources, R.drawable.description_image, null)!!
-                    .toBitmap(720, 1280, null)
+                    .toBitmap(PAGER_IMAGE_WIDTH, PAGER_IMAGE_HEIGHT, null)
             )
             add(
                 ResourcesCompat.getDrawable(resources, R.drawable.description_image_white, null)!!
-                    .toBitmap(720, 1280, null)
+                    .toBitmap(PAGER_IMAGE_WIDTH, PAGER_IMAGE_HEIGHT, null)
             )
             add(
                 ResourcesCompat.getDrawable(resources, R.drawable.smartphone_people, null)!!
-                    .toBitmap(720, 1280, null)
+                    .toBitmap(PAGER_IMAGE_WIDTH, PAGER_IMAGE_HEIGHT, null)
             )
         }
 
@@ -95,7 +95,8 @@ class TutorialActivity : ComponentActivity() {
                     ColorUtils.blendARGB(
                         centerColor,
                         rightColor,
-                        pagerState.currentPageOffset)
+                        pagerState.currentPageOffset
+                    )
                 )
             } else {
                 Color(
@@ -141,14 +142,14 @@ class TutorialActivity : ComponentActivity() {
             }
         )
         Column(
-            modifier = Modifier.background(animatedColor.value),
+            modifier = Modifier.background(animatedColor.value).fillMaxWidth().fillMaxHeight(),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
             HorizontalPager(state = pagerState) {
                 Column(
                     modifier = Modifier
-                        .padding(top = 12.dp),
+                        .padding(top = PAGER_PADDING),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
@@ -156,11 +157,11 @@ class TutorialActivity : ComponentActivity() {
                         bitmap = imageList[it].asImageBitmap(),
                         contentDescription = null,
                         contentScale = ContentScale.Crop,
-                        modifier = Modifier.padding(top = 12.dp)
+                        modifier = Modifier.padding(top = IMAGE_PADDING)
                     )
                     Text(
                         text = textList[it],
-                        modifier = Modifier.padding(48.dp),
+                        modifier = Modifier.padding(TEXT_PADDING),
                         color = ImageNotificationTheme.colors.text,
                         textAlign = TextAlign.Center,
                     )
@@ -188,8 +189,8 @@ class TutorialActivity : ComponentActivity() {
                 },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(80.dp)
-                    .padding(top = 24.dp, start = 24.dp, end = 24.dp)
+                    .height(BUTTON_HEIGHT)
+                    .padding(top = BUTTON_PADDING, start = BUTTON_PADDING, end = BUTTON_PADDING)
                     .alpha(buttonAlpha),
                 colors = ButtonDefaults.outlinedButtonColors(
                     backgroundColor = White,
@@ -201,5 +202,15 @@ class TutorialActivity : ComponentActivity() {
             }
 
         }
+    }
+
+    companion object {
+        private const val PAGER_IMAGE_WIDTH = 720
+        private const val PAGER_IMAGE_HEIGHT = 1280
+        private val PAGER_PADDING = 12.dp
+        private val IMAGE_PADDING = 12.dp
+        private val TEXT_PADDING = 48.dp
+        private val BUTTON_HEIGHT = 80.dp
+        private val BUTTON_PADDING = 24.dp
     }
 }

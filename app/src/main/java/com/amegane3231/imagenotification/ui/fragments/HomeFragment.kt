@@ -240,8 +240,8 @@ class HomeFragment : Fragment() {
                     },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(80.dp)
-                        .padding(top = 24.dp, start = 24.dp, end = 24.dp),
+                        .height(BUTTON_HEIGHT)
+                        .padding(top = BUTTON_PADDING, start = BUTTON_PADDING, end = BUTTON_PADDING),
                     colors = ButtonDefaults.outlinedButtonColors(
                         backgroundColor = if (isNotifying) ImageNotificationTheme.colors.primary else ImageNotificationTheme.colors.disable,
                         contentColor = ImageNotificationTheme.colors.text
@@ -268,10 +268,10 @@ class HomeFragment : Fragment() {
                         val canvas = Canvas(bitmap)
                         buttonIconDrawable.setBounds(0, 0, canvas.width, canvas.height)
                         buttonIconDrawable.draw(canvas)
-                        Icon(bitmap = bitmap.asImageBitmap(), contentDescription = "set")
+                        Icon(bitmap = bitmap.asImageBitmap(), contentDescription = null)
                         Text(
-                            text = " ${it.getString(requireContext())}",
-                            modifier = Modifier.padding(top = 2.dp)
+                            text = it.getString(requireContext()),
+                            modifier = Modifier.padding(top = TEXT_PADDING)
                         )
                     }
                 }
@@ -282,6 +282,8 @@ class HomeFragment : Fragment() {
     companion object {
         private const val DEFAULT_IMAGE_WIDTH = 512
         private const val DEFAULT_IMAGE_HEIGHT = 512
-        private val PADDING_BUTTON = 12.dp
+        private val TEXT_PADDING = 2.dp
+        private val BUTTON_HEIGHT = 80.dp
+        private val BUTTON_PADDING = 24.dp
     }
 }

@@ -70,15 +70,21 @@ fun Bitmap.createAlphaImage(): Bitmap {
     return bitmap
 }
 
-fun Bitmap.createIconImage() : Bitmap {
+fun Bitmap.createIconImage(): Bitmap {
     val resizeScale = if (this.width >= this.height) {
         BLEND_IMAGE_WIDTH / this.width
     } else {
         BLEND_IMAGE_HEIGHT / this.height
     }
-    val iconImage = this.resize((this.width * resizeScale).toInt(), (this.height * resizeScale).toInt())
+    val iconImage =
+        this.resize((this.width * resizeScale).toInt(), (this.height * resizeScale).toInt())
     val iconBase = Bitmap.createBitmap(ICON_WIDTH, ICON_HEIGHT, Bitmap.Config.ARGB_8888)
     val canvas = Canvas(iconBase)
-    canvas.drawBitmap(iconImage, (iconBase.width - iconImage.width) / 2F, (iconBase.height - iconImage.height) / 2F, null)
+    canvas.drawBitmap(
+        iconImage,
+        (iconBase.width - iconImage.width) / 2F,
+        (iconBase.height - iconImage.height) / 2F,
+        null
+    )
     return iconBase
 }

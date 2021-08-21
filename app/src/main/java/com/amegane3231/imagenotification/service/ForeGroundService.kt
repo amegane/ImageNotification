@@ -48,7 +48,12 @@ class ForeGroundService : Service() {
                 try {
                     applicationContext.openFileInput(it).use { stream ->
                         val iconImage = BitmapFactory.decodeStream(stream)
-                        setSmallIcon(IconCompat.createFromIcon(this@ForeGroundService, Icon.createWithBitmap(iconImage))!!)
+                        setSmallIcon(
+                            IconCompat.createFromIcon(
+                                this@ForeGroundService,
+                                Icon.createWithBitmap(iconImage)
+                            )!!
+                        )
                     }
                 } catch (e: Exception) {
                     Log.e("Exception", e.toString())
@@ -58,7 +63,8 @@ class ForeGroundService : Service() {
         }.build()
         notification.flags = Notification.FLAG_ONGOING_EVENT
 
-        val notificationState = intent?.getSerializableExtra("notificationState") as NotificationState
+        val notificationState =
+            intent?.getSerializableExtra("notificationState") as NotificationState
         when (notificationState) {
             NotificationState.PIN_IMAGE -> {
                 startForeground(NOTIFICATION_ID, notification)

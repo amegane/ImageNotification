@@ -57,15 +57,6 @@ fun AppBar(title: String) {
                     }
                 }
             }
-
-            CompositionLocalProvider(LocalContentAlpha provides ContentAlpha.medium) {
-                Row(
-                    Modifier.fillMaxHeight(),
-                    horizontalArrangement = Arrangement.End,
-                    verticalAlignment = Alignment.CenterVertically,
-                    content = {}
-                )
-            }
         }
     }
 }
