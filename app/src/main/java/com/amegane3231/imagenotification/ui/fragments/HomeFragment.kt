@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.edit
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.graphics.createBitmap
+import androidx.core.graphics.drawable.toBitmap
 import androidx.fragment.app.Fragment
 import androidx.preference.PreferenceManager
 import com.amegane3231.imagenotification.R
@@ -57,24 +58,8 @@ class HomeFragment : Fragment() {
             if (it.resultCode == Activity.RESULT_OK && it.data?.data != null) {
                 val uri = it.data?.data!!
                 val notificationState = NotificationState.PIN_IMAGE
-                val date = Date()
-                val formatter = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault())
-                val imageFileName = "image_${formatter.format(date)}.png"
-                val iconFileName = "icon_${formatter.format(date)}.png"
-                PreferenceManager.getDefaultSharedPreferences(requireContext()).edit {
-                    putString(SharedPreferenceKey.ImageFileName.name, imageFileName)
-                    putString(SharedPreferenceKey.IconFileName.name, iconFileName)
-                }
                 val iconImage = getBitmap(uri)
-                saveImageFile(iconImage, imageFileName)
-                saveIconFile(iconImage, iconFileName)
-                isNotifying = true
-                homeViewModel.apply {
-                    setImage(iconImage.asImageBitmap())
-                    changeFileName(iconFileName)
-                    changeText(isNotifying)
-                }
-                startService(iconFileName, notificationState)
+                attachIconImage(iconImage, notificationState)
             }
         }
 
@@ -107,16 +92,36 @@ class HomeFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         val iconFileName = PreferenceManager.getDefaultSharedPreferences(requireContext())
-            .getString(SharedPreferenceKey.IconFileName.name, "")
-        iconFileName?.let {
-            homeViewModel.changeFileName(it)
-            startService(it, NotificationState.PIN_IMAGE)
+            .getString(SharedPreferenceKey.IconFileName.name, null)
+        Log.d("iconName", iconFileName.toString())
+        if (!iconFileName.isNullOrBlank()) {
+            homeViewModel.changeFileName(iconFileName)
+            startService(iconFileName, NotificationState.PIN_IMAGE)
             isNotifying = true
+        } else {
+            val iconImage =
+                ResourcesCompat.getDrawable(resources, R.drawable.image_notification, null)!!
+                    .toBitmap(
+                        DEFAULT_IMAGE_WIDTH,
+                        DEFAULT_IMAGE_HEIGHT,
+                        null
+                    )
+            attachIconImage(iconImage, NotificationState.PIN_IMAGE)
         }
         val imageFileName = PreferenceManager.getDefaultSharedPreferences(requireContext())
-            .getString(SharedPreferenceKey.ImageFileName.name, "")
-        imageFileName?.let {
-            homeViewModel.setImage(getBitmap(it).asImageBitmap())
+            .getString(SharedPreferenceKey.ImageFileName.name, null)
+        Log.d("imageFile", imageFileName.toString())
+        if (!imageFileName.isNullOrBlank()) {
+            homeViewModel.setImage(getBitmap(imageFileName).asImageBitmap())
+        } else {
+            homeViewModel.setImage(
+                ResourcesCompat.getDrawable(resources, R.drawable.image_notification, null)!!
+                    .toBitmap(
+                        DEFAULT_IMAGE_WIDTH,
+                        DEFAULT_IMAGE_HEIGHT,
+                        null
+                    ).asImageBitmap()
+            )
         }
         homeViewModel.changeText(isNotifying)
         return ComposeView(inflater.context).apply {
@@ -157,11 +162,12 @@ class HomeFragment : Fragment() {
             bitmap
         } catch (e: Exception) {
             Log.e("Exception", e.toString())
-            createBitmap(
-                width = DEFAULT_IMAGE_WIDTH,
-                height = DEFAULT_IMAGE_HEIGHT,
-                config = Bitmap.Config.ARGB_8888
-            )
+            ResourcesCompat.getDrawable(resources, R.drawable.image_notification, null)!!
+                .toBitmap(
+                    DEFAULT_IMAGE_WIDTH,
+                    DEFAULT_IMAGE_HEIGHT,
+                    null
+                )
         }
     }
 
@@ -172,12 +178,33 @@ class HomeFragment : Fragment() {
             }
         } catch (e: Exception) {
             Log.e("Exception", e.toString())
-            createBitmap(
-                width = DEFAULT_IMAGE_WIDTH,
-                height = DEFAULT_IMAGE_HEIGHT,
-                config = Bitmap.Config.ARGB_8888
-            )
+            ResourcesCompat.getDrawable(resources, R.drawable.image_notification, null)!!
+                .toBitmap(
+                    DEFAULT_IMAGE_WIDTH,
+                    DEFAULT_IMAGE_HEIGHT,
+                    null
+                )
         }
+    }
+
+    private fun attachIconImage(bitmap: Bitmap, notificationState: NotificationState) {
+        val date = Date()
+        val formatter = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault())
+        val imageFileName = "image_${formatter.format(date)}.png"
+        val iconFileName = "icon_${formatter.format(date)}.png"
+        PreferenceManager.getDefaultSharedPreferences(requireContext()).edit {
+            putString(SharedPreferenceKey.ImageFileName.name, imageFileName)
+            putString(SharedPreferenceKey.IconFileName.name, iconFileName)
+        }
+        saveImageFile(bitmap, imageFileName)
+        saveIconFile(bitmap, iconFileName)
+        isNotifying = true
+        homeViewModel.apply {
+            setImage(bitmap.asImageBitmap())
+            changeFileName(iconFileName)
+            changeText(isNotifying)
+        }
+        startService(iconFileName, notificationState)
     }
 
     private fun saveImageFile(bitmap: Bitmap, fileName: String) {
@@ -241,7 +268,11 @@ class HomeFragment : Fragment() {
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(BUTTON_HEIGHT)
-                        .padding(top = BUTTON_PADDING, start = BUTTON_PADDING, end = BUTTON_PADDING),
+                        .padding(
+                            top = BUTTON_PADDING,
+                            start = BUTTON_PADDING,
+                            end = BUTTON_PADDING
+                        ),
                     colors = ButtonDefaults.outlinedButtonColors(
                         backgroundColor = if (isNotifying) ImageNotificationTheme.colors.primary else ImageNotificationTheme.colors.disable,
                         contentColor = ImageNotificationTheme.colors.text

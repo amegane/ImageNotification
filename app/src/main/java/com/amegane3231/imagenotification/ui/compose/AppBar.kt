@@ -32,8 +32,8 @@ fun AppBar(title: String) {
                         enabled = true,
                     ) {
                         Icon(
-                            painter = painterResource(id = com.amegane3231.imagenotification.R.drawable.ic_launcher_foreground),
-                            contentDescription = "Back",
+                            painter = painterResource(id = com.amegane3231.imagenotification.R.drawable.image_notification),
+                            contentDescription = null,
                         )
                     }
                 }
