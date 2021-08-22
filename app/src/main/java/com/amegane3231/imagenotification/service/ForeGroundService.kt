@@ -24,9 +24,9 @@ class ForeGroundService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         val name = getString((R.string.app_name))
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             val descriptionText = ""
             val importance = NotificationManager.IMPORTANCE_LOW
             val channel = NotificationChannel(CHANNEL_ID, name, importance)
@@ -67,10 +67,10 @@ class ForeGroundService : Service() {
             intent?.getSerializableExtra("notificationState") as NotificationState
         when (notificationState) {
             NotificationState.PIN_IMAGE -> {
-                startForeground(NOTIFICATION_ID, notification)
+                manager.notify(NOTIFICATION_ID, notification)
             }
             NotificationState.CANCEL_IMAGE -> {
-                stopForeground(STOP_FOREGROUND_REMOVE)
+                manager.cancel(NOTIFICATION_ID)
             }
         }
         return START_STICKY
