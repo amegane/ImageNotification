@@ -81,6 +81,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     companion object {
-        private const val AD_UNIT_ID = "ca-app-pub-3940256099942544/6300978111"
+        private const val AD_UNIT_ID = "ca-app-pub-3711976931693295/1355176328"
     }
 }

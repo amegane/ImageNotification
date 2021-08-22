@@ -336,6 +336,6 @@ class HomeFragment : Fragment() {
         private val TEXT_PADDING = 2.dp
         private val BUTTON_HEIGHT = 80.dp
         private val BUTTON_PADDING = 24.dp
-        private const val AD_UNIT_ID = "ca-app-pub-3940256099942544/1033173712"
+        private const val AD_UNIT_ID = "ca-app-pub-3711976931693295/4608859775"
     }
 }
