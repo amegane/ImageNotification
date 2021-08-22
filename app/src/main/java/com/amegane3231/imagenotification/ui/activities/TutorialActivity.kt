@@ -34,7 +34,8 @@ import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.PagerState
 import com.google.accompanist.pager.rememberPagerState
-import kotlin.math.abs
+import kotlin.math.ceil
+import kotlin.math.floor
 
 class TutorialActivity : ComponentActivity() {
     @ExperimentalPagerApi
@@ -55,13 +56,15 @@ class TutorialActivity : ComponentActivity() {
                     .toBitmap(PAGER_IMAGE_WIDTH, PAGER_IMAGE_HEIGHT, null)
             )
         }
-
-
-        val textList = mutableListOf<String>()
-        textList.apply {
+        val textList = mutableListOf<String>().apply {
             add(getString(R.string.text_app_description))
             add(getString(R.string.text_app_description2))
             add(getString(R.string.text_app_description3))
+        }
+        val colorList = mutableListOf<Color>().apply {
+            add(LightBlue400)
+            add(Green400)
+            add(Orange400)
         }
 
         setContent {
@@ -75,7 +78,8 @@ class TutorialActivity : ComponentActivity() {
                     TutorialViewPager(
                         pagerState = pagerState,
                         imageList = imageList,
-                        textList = textList
+                        textList = textList,
+                        colorList = colorList
                     )
                 }
             }
@@ -85,30 +89,40 @@ class TutorialActivity : ComponentActivity() {
     @ExperimentalPagerApi
     private fun setPagerBackgroundColor(
         pagerState: PagerState,
-        leftColor: Int,
-        centerColor: Int,
-        rightColor: Int
+        colorList: List<Color>
     ): Color {
         return if (pagerState.isScrollInProgress) {
             if (pagerState.currentPageOffset >= 0) {
+                val currentIndex = pagerState.currentPage + floor(pagerState.currentPageOffset).toInt()
+                val nextIndex = if (pagerState.currentPage + floor(pagerState.currentPageOffset).toInt() != pagerState.pageCount - 1) {
+                    pagerState.currentPage + floor(pagerState.currentPageOffset).toInt() + 1
+                } else {
+                    pagerState.currentPage + floor(pagerState.currentPageOffset).toInt()
+                }
                 Color(
                     ColorUtils.blendARGB(
-                        centerColor,
-                        rightColor,
-                        pagerState.currentPageOffset
+                        colorList[currentIndex].toArgb(),
+                        colorList[nextIndex].toArgb(),
+                        pagerState.currentPageOffset - floor(pagerState.currentPageOffset)
                     )
                 )
             } else {
+                val currentIndex = pagerState.currentPage + ceil(pagerState.currentPageOffset).toInt()
+                val previousIndex = if (pagerState.currentPage + ceil(pagerState.currentPageOffset).toInt() != 0) {
+                    pagerState.currentPage + ceil(pagerState.currentPageOffset).toInt() - 1
+                } else {
+                    pagerState.currentPage + ceil(pagerState.currentPageOffset).toInt()
+                }
                 Color(
                     ColorUtils.blendARGB(
-                        centerColor,
-                        leftColor,
-                        abs(pagerState.currentPageOffset)
+                        colorList[previousIndex].toArgb(),
+                        colorList[currentIndex].toArgb(),
+                        pagerState.currentPageOffset - floor(pagerState.currentPageOffset)
                     )
                 )
             }
         } else {
-            Color(centerColor)
+            Color(colorList[pagerState.currentPage].toArgb())
         }
     }
 
@@ -117,32 +131,17 @@ class TutorialActivity : ComponentActivity() {
     private fun TutorialViewPager(
         pagerState: PagerState,
         imageList: List<Bitmap>,
-        textList: List<String>
+        textList: List<String>,
+        colorList: List<Color>
     ) {
         val animatedColor = animateColorAsState(
-            when (pagerState.currentPage) {
-                0 -> setPagerBackgroundColor(
-                    pagerState,
-                    LightBlue400.toArgb(),
-                    LightBlue400.toArgb(),
-                    Green400.toArgb()
-                )
-                1 -> setPagerBackgroundColor(
-                    pagerState,
-                    LightBlue400.toArgb(),
-                    Green400.toArgb(),
-                    Orange400.toArgb()
-                )
-                else -> setPagerBackgroundColor(
-                    pagerState,
-                    Green400.toArgb(),
-                    Orange400.toArgb(),
-                    Orange400.toArgb()
-                )
-            }
+            setPagerBackgroundColor(pagerState, colorList)
         )
         Column(
-            modifier = Modifier.background(animatedColor.value).fillMaxWidth().fillMaxHeight(),
+            modifier = Modifier
+                .background(animatedColor.value)
+                .fillMaxWidth()
+                .fillMaxHeight(),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
