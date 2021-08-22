@@ -1,6 +1,7 @@
 package com.amegane3231.imagenotification.ui.activities
 
 import android.content.Intent
+import android.content.res.Resources
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
@@ -9,6 +10,7 @@ import androidx.compose.material.Scaffold
 import androidx.compose.material.Surface
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.viewinterop.AndroidViewBinding
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
@@ -19,6 +21,9 @@ import com.amegane3231.imagenotification.data.SharedPreferenceKey
 import com.amegane3231.imagenotification.databinding.ActivityMainBinding
 import com.amegane3231.imagenotification.ui.compose.AppBar
 import com.amegane3231.imagenotification.ui.theme.ImageNotificationTheme
+import com.google.android.gms.ads.AdRequest
+import com.google.android.gms.ads.AdSize
+import com.google.android.gms.ads.AdView
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -44,7 +49,21 @@ class MainActivity : AppCompatActivity() {
                     Scaffold(
                         scaffoldState = scaffoldState,
                         topBar = { AppBar(getString(R.string.app_name)) },
-                        content = { AndroidViewBinding(ActivityMainBinding::inflate) }
+                        content = {
+                            AndroidView(
+                                modifier = Modifier.fillMaxWidth(),
+                                factory = { context ->
+                                    val adView = AdView(context)
+                                    val displayMetrics = Resources.getSystem().displayMetrics
+                                    val width = (displayMetrics.widthPixels / displayMetrics.density).toInt()
+                                    adView.adSize = AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(context, width)
+                                    adView.adUnitId = AD_UNIT_ID
+                                    adView.loadAd(AdRequest.Builder().build())
+                                    adView
+                                }
+                            )
+                            AndroidViewBinding(ActivityMainBinding::inflate)
+                        }
                     )
                 }
             }
@@ -59,5 +78,9 @@ class MainActivity : AppCompatActivity() {
         val navHostFragment =
             supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
         return navHostFragment.navController
+    }
+
+    companion object {
+        private const val AD_UNIT_ID = "ca-app-pub-3940256099942544/6300978111"
     }
 }

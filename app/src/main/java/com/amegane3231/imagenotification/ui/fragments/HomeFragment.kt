@@ -43,6 +43,10 @@ import com.amegane3231.imagenotification.extensions.rgbToGray
 import com.amegane3231.imagenotification.service.ForeGroundService
 import com.amegane3231.imagenotification.ui.theme.ImageNotificationTheme
 import com.amegane3231.imagenotification.viewmodels.HomeViewModel
+import com.google.android.gms.ads.AdRequest
+import com.google.android.gms.ads.LoadAdError
+import com.google.android.gms.ads.interstitial.InterstitialAd
+import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -52,6 +56,7 @@ import java.util.*
 
 class HomeFragment : Fragment() {
     private val homeViewModel: HomeViewModel by lazy { HomeViewModel() }
+    private var interstitialAd: InterstitialAd? = null
     private var isNotifying = false
     private val getImageContent =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
@@ -60,6 +65,7 @@ class HomeFragment : Fragment() {
                 val notificationState = NotificationState.PIN_IMAGE
                 val iconImage = getBitmap(uri)
                 attachIconImage(iconImage, notificationState)
+                interstitialAd?.show(requireActivity())
             }
         }
 
@@ -85,6 +91,20 @@ class HomeFragment : Fragment() {
                 getImageContent.launch(intent)
             }
         }
+
+        val adRequest = AdRequest.Builder().build()
+
+        InterstitialAd.load(requireContext(), AD_UNIT_ID, adRequest, object : InterstitialAdLoadCallback() {
+            override fun onAdFailedToLoad(adError: LoadAdError) {
+                Log.d("Failed to load", adError.message)
+                interstitialAd = null
+            }
+
+            override fun onAdLoaded(interstitialAd: InterstitialAd) {
+                Log.d("Sucsess", "Ad loaded")
+                this@HomeFragment.interstitialAd = interstitialAd
+            }
+        })
     }
 
     override fun onCreateView(
@@ -311,10 +331,11 @@ class HomeFragment : Fragment() {
     }
 
     companion object {
-        private const val DEFAULT_IMAGE_WIDTH = 512
-        private const val DEFAULT_IMAGE_HEIGHT = 512
+        private const val DEFAULT_IMAGE_WIDTH = 448
+        private const val DEFAULT_IMAGE_HEIGHT = 448
         private val TEXT_PADDING = 2.dp
         private val BUTTON_HEIGHT = 80.dp
         private val BUTTON_PADDING = 24.dp
+        private const val AD_UNIT_ID = "ca-app-pub-3940256099942544/1033173712"
     }
 }
