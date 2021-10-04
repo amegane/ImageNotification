@@ -34,6 +34,7 @@ import androidx.core.content.res.ResourcesCompat
 import androidx.core.graphics.createBitmap
 import androidx.core.graphics.drawable.toBitmap
 import androidx.fragment.app.Fragment
+import androidx.navigation.fragment.findNavController
 import androidx.preference.PreferenceManager
 import com.amegane3231.imagenotification.R
 import com.amegane3231.imagenotification.data.AppLaunchState
@@ -76,7 +77,10 @@ class HomeFragment : Fragment() {
                 SharedPreferenceKey.AppLaunchedState.name,
                 AppLaunchState.FirstChoiceImage.state
             )
-        if (appLaunchedState <= 1) {
+        if (appLaunchedState == AppLaunchState.FirstChoiceImage.state) {
+            findNavController().navigate(R.id.action_home_to_tutorial)
+        }
+        else if (appLaunchedState == AppLaunchState.NotSetImage.state) {
             PreferenceManager.getDefaultSharedPreferences(requireContext()).edit {
                 putInt(
                     SharedPreferenceKey.AppLaunchedState.name,

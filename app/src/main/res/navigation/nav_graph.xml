@@ -8,5 +8,22 @@
     <fragment
         android:id="@+id/homeFragment"
         android:name="com.amegane3231.imagenotification.ui.fragments.HomeFragment"
-        android:label="fragment_home" />
+        android:label="fragment_home" >
+        <action
+            android:id="@+id/action_home_to_tutorial"
+            app:destination="@id/tutorialFragment" />
+        <argument
+            android:name="appLaunchStateArg"
+            app:argType="integer" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/tutorialFragment"
+        android:name="com.amegane3231.imagenotification.ui.fragments.TutorialFragment"
+        android:label="fragment_tutorial" >
+        <action
+            android:id="@+id/action_tutorial_to_home"
+            app:destination="@id/homeFragment">
+        </action>
+    </fragment>
 </navigation>

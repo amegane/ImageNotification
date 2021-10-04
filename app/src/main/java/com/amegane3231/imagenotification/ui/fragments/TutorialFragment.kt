@@ -1,15 +1,18 @@
-package com.amegane3231.imagenotification.ui.activities
+package com.amegane3231.imagenotification.ui.fragments
 
-import android.content.Intent
 import android.graphics.Bitmap
 import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.*
+import androidx.compose.material.ButtonDefaults
+import androidx.compose.material.OutlinedButton
+import androidx.compose.material.Surface
+import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -18,12 +21,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.content.edit
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.graphics.ColorUtils
 import androidx.core.graphics.drawable.toBitmap
+import androidx.fragment.app.Fragment
+import androidx.navigation.fragment.findNavController
 import androidx.preference.PreferenceManager
 import com.amegane3231.imagenotification.R
 import com.amegane3231.imagenotification.data.AppLaunchState
@@ -37,22 +43,27 @@ import com.google.accompanist.pager.rememberPagerState
 import kotlin.math.ceil
 import kotlin.math.floor
 
-class TutorialActivity : ComponentActivity() {
+class TutorialFragment : Fragment() {
     @ExperimentalPagerApi
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
         val imageList = mutableListOf<Bitmap>().apply {
             add(
-                ResourcesCompat.getDrawable(resources, R.drawable.description_image, null)!!
+                ResourcesCompat
+                    .getDrawable(resources, R.drawable.description_image, null)!!
                     .toBitmap(PAGER_IMAGE_WIDTH, PAGER_IMAGE_HEIGHT, null)
             )
             add(
-                ResourcesCompat.getDrawable(resources, R.drawable.description_image_white, null)!!
+                ResourcesCompat
+                    .getDrawable(resources, R.drawable.description_image_white, null)!!
                     .toBitmap(PAGER_IMAGE_WIDTH, PAGER_IMAGE_HEIGHT, null)
             )
             add(
-                ResourcesCompat.getDrawable(resources, R.drawable.smartphone_people, null)!!
+                ResourcesCompat
+                    .getDrawable(resources, R.drawable.smartphone_people, null)!!
                     .toBitmap(PAGER_IMAGE_WIDTH, PAGER_IMAGE_HEIGHT, null)
             )
         }
@@ -66,21 +77,22 @@ class TutorialActivity : ComponentActivity() {
             add(Green400)
             add(Orange400)
         }
-
-        setContent {
-            val pagerState = rememberPagerState(pageCount = 3)
-            ImageNotificationTheme {
-                Surface(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .fillMaxHeight(),
-                ) {
-                    TutorialViewPager(
-                        pagerState = pagerState,
-                        imageList = imageList,
-                        textList = textList,
-                        colorList = colorList
-                    )
+        return ComposeView(inflater.context).apply {
+            setContent {
+                val pagerState = rememberPagerState(pageCount = 3)
+                ImageNotificationTheme {
+                    Surface(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .fillMaxHeight(),
+                    ) {
+                        TutorialViewPager(
+                            pagerState = pagerState,
+                            imageList = imageList,
+                            textList = textList,
+                            colorList = colorList
+                        )
+                    }
                 }
             }
         }
@@ -93,12 +105,14 @@ class TutorialActivity : ComponentActivity() {
     ): Color {
         return if (pagerState.isScrollInProgress) {
             if (pagerState.currentPageOffset >= 0) {
-                val currentIndex = pagerState.currentPage + floor(pagerState.currentPageOffset).toInt()
-                val nextIndex = if (pagerState.currentPage + floor(pagerState.currentPageOffset).toInt() != pagerState.pageCount - 1) {
-                    pagerState.currentPage + floor(pagerState.currentPageOffset).toInt() + 1
-                } else {
+                val currentIndex =
                     pagerState.currentPage + floor(pagerState.currentPageOffset).toInt()
-                }
+                val nextIndex =
+                    if (pagerState.currentPage + floor(pagerState.currentPageOffset).toInt() != pagerState.pageCount - 1) {
+                        pagerState.currentPage + floor(pagerState.currentPageOffset).toInt() + 1
+                    } else {
+                        pagerState.currentPage + floor(pagerState.currentPageOffset).toInt()
+                    }
                 Color(
                     ColorUtils.blendARGB(
                         colorList[currentIndex].toArgb(),
@@ -107,12 +121,14 @@ class TutorialActivity : ComponentActivity() {
                     )
                 )
             } else {
-                val currentIndex = pagerState.currentPage + ceil(pagerState.currentPageOffset).toInt()
-                val previousIndex = if (pagerState.currentPage + ceil(pagerState.currentPageOffset).toInt() != 0) {
-                    pagerState.currentPage + ceil(pagerState.currentPageOffset).toInt() - 1
-                } else {
+                val currentIndex =
                     pagerState.currentPage + ceil(pagerState.currentPageOffset).toInt()
-                }
+                val previousIndex =
+                    if (pagerState.currentPage + ceil(pagerState.currentPageOffset).toInt() != 0) {
+                        pagerState.currentPage + ceil(pagerState.currentPageOffset).toInt() - 1
+                    } else {
+                        pagerState.currentPage + ceil(pagerState.currentPageOffset).toInt()
+                    }
                 Color(
                     ColorUtils.blendARGB(
                         colorList[previousIndex].toArgb(),
@@ -174,17 +190,15 @@ class TutorialActivity : ComponentActivity() {
             val buttonAlpha = if (isLastPage) 1F else 0F
             OutlinedButton(
                 onClick = {
-                    PreferenceManager.getDefaultSharedPreferences(applicationContext)
+                    PreferenceManager.getDefaultSharedPreferences(requireContext())
                         .edit {
                             putInt(
                                 SharedPreferenceKey.AppLaunchedState.name,
                                 AppLaunchState.NotSetImage.state
                             )
                         }
-                    val intent = Intent(this@TutorialActivity, MainActivity::class.java)
-                    intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
-                    startActivity(intent)
-                    finish()
+                    val action = TutorialFragmentDirections.actionTutorialToHome(AppLaunchState.NotSetImage.state)
+                    findNavController().navigate(action)
                 },
                 modifier = Modifier
                     .fillMaxWidth()
