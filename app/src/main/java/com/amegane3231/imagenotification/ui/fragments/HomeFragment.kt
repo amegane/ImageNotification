@@ -1,13 +1,10 @@
 package com.amegane3231.imagenotification.ui.fragments
 
 import android.app.Activity
-import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.drawable.VectorDrawable
-import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -34,13 +31,13 @@ import androidx.core.content.res.ResourcesCompat
 import androidx.core.graphics.createBitmap
 import androidx.core.graphics.drawable.toBitmap
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.preference.PreferenceManager
 import com.amegane3231.imagenotification.R
 import com.amegane3231.imagenotification.data.AppLaunchState
 import com.amegane3231.imagenotification.data.NotificationState
 import com.amegane3231.imagenotification.data.SharedPreferenceKey
-import com.amegane3231.imagenotification.extensions.rgbToGray
 import com.amegane3231.imagenotification.service.ForeGroundService
 import com.amegane3231.imagenotification.ui.theme.ImageNotificationTheme
 import com.amegane3231.imagenotification.viewmodels.HomeViewModel
@@ -56,15 +53,18 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 class HomeFragment : Fragment() {
-    private val homeViewModel: HomeViewModel by lazy { HomeViewModel() }
+    private val homeViewModel: HomeViewModel by viewModels()
+
     private var interstitialAd: InterstitialAd? = null
+
     private var isNotifying = false
+
     private val getImageContent =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
             if (it.resultCode == Activity.RESULT_OK && it.data?.data != null) {
                 val uri = it.data?.data!!
                 val notificationState = NotificationState.PIN_IMAGE
-                val iconImage = getBitmap(uri)
+                val iconImage = homeViewModel.getBitmap(uri, requireContext(), resources)
                 attachIconImage(iconImage, notificationState)
                 interstitialAd?.show(requireActivity())
             }
@@ -79,8 +79,7 @@ class HomeFragment : Fragment() {
             )
         if (appLaunchedState == AppLaunchState.FirstChoiceImage.state) {
             findNavController().navigate(R.id.action_home_to_tutorial)
-        }
-        else if (appLaunchedState == AppLaunchState.NotSetImage.state) {
+        } else if (appLaunchedState == AppLaunchState.NotSetImage.state) {
             PreferenceManager.getDefaultSharedPreferences(requireContext()).edit {
                 putInt(
                     SharedPreferenceKey.AppLaunchedState.name,
@@ -97,27 +96,38 @@ class HomeFragment : Fragment() {
         }
 
         val adRequest = AdRequest.Builder().build()
+        InterstitialAd.load(
+            requireContext(),
+            AD_UNIT_ID,
+            adRequest,
+            object : InterstitialAdLoadCallback() {
+                override fun onAdFailedToLoad(adError: LoadAdError) {
+                    Log.d("Failed to load", adError.message)
+                    interstitialAd = null
+                }
 
-        InterstitialAd.load(requireContext(), AD_UNIT_ID, adRequest, object : InterstitialAdLoadCallback() {
-            override fun onAdFailedToLoad(adError: LoadAdError) {
-                Log.d("Failed to load", adError.message)
-                interstitialAd = null
-            }
-
-            override fun onAdLoaded(interstitialAd: InterstitialAd) {
-                Log.d("Sucsess", "Ad loaded")
-                this@HomeFragment.interstitialAd = interstitialAd
-            }
-        })
+                override fun onAdLoaded(interstitialAd: InterstitialAd) {
+                    Log.d("Success", "Ad loaded")
+                    this@HomeFragment.interstitialAd = interstitialAd
+                }
+            })
     }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
+        return ComposeView(inflater.context).apply {
+            setContent {
+                LayoutContent()
+            }
+        }
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
         val iconFileName = PreferenceManager.getDefaultSharedPreferences(requireContext())
             .getString(SharedPreferenceKey.IconFileName.name, null)
-        Log.d("iconName", iconFileName.toString())
         if (!iconFileName.isNullOrBlank()) {
             homeViewModel.changeFileName(iconFileName)
             startService(iconFileName, NotificationState.PIN_IMAGE)
@@ -132,11 +142,17 @@ class HomeFragment : Fragment() {
                     )
             attachIconImage(iconImage, NotificationState.PIN_IMAGE)
         }
+
         val imageFileName = PreferenceManager.getDefaultSharedPreferences(requireContext())
             .getString(SharedPreferenceKey.ImageFileName.name, null)
-        Log.d("imageFile", imageFileName.toString())
         if (!imageFileName.isNullOrBlank()) {
-            homeViewModel.setImage(getBitmap(imageFileName).asImageBitmap())
+            homeViewModel.setImage(
+                homeViewModel.getBitmap(
+                    imageFileName,
+                    requireContext(),
+                    resources
+                ).asImageBitmap()
+            )
         } else {
             homeViewModel.setImage(
                 ResourcesCompat.getDrawable(resources, R.drawable.image_notification, null)!!
@@ -147,12 +163,8 @@ class HomeFragment : Fragment() {
                     ).asImageBitmap()
             )
         }
+
         homeViewModel.changeText(isNotifying)
-        return ComposeView(inflater.context).apply {
-            setContent {
-                LayoutContent()
-            }
-        }
     }
 
     private fun startService(fileName: String, notificationState: NotificationState) {
@@ -176,41 +188,6 @@ class HomeFragment : Fragment() {
         }
     }
 
-    private fun getBitmap(uri: Uri): Bitmap {
-        return try {
-            val openFileDescriptor =
-                requireContext().contentResolver.openFileDescriptor(uri, "r")
-            val fileDescriptor = openFileDescriptor?.fileDescriptor
-            val bitmap = BitmapFactory.decodeFileDescriptor(fileDescriptor)
-            openFileDescriptor?.close()
-            bitmap
-        } catch (e: Exception) {
-            Log.e("Exception", e.toString())
-            ResourcesCompat.getDrawable(resources, R.drawable.image_notification, null)!!
-                .toBitmap(
-                    DEFAULT_IMAGE_WIDTH,
-                    DEFAULT_IMAGE_HEIGHT,
-                    null
-                )
-        }
-    }
-
-    private fun getBitmap(fileName: String): Bitmap {
-        return try {
-            requireContext().openFileInput(fileName).use { stream ->
-                return BitmapFactory.decodeStream(stream)
-            }
-        } catch (e: Exception) {
-            Log.e("Exception", e.toString())
-            ResourcesCompat.getDrawable(resources, R.drawable.image_notification, null)!!
-                .toBitmap(
-                    DEFAULT_IMAGE_WIDTH,
-                    DEFAULT_IMAGE_HEIGHT,
-                    null
-                )
-        }
-    }
-
     private fun attachIconImage(bitmap: Bitmap, notificationState: NotificationState) {
         val date = Date()
         val formatter = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault())
@@ -220,8 +197,8 @@ class HomeFragment : Fragment() {
             putString(SharedPreferenceKey.ImageFileName.name, imageFileName)
             putString(SharedPreferenceKey.IconFileName.name, iconFileName)
         }
-        saveImageFile(bitmap, imageFileName)
-        saveIconFile(bitmap, iconFileName)
+        homeViewModel.saveImageFile(bitmap, imageFileName, requireContext())
+        homeViewModel.saveIconFile(bitmap, iconFileName, requireContext())
         isNotifying = true
         homeViewModel.apply {
             setImage(bitmap.asImageBitmap())
@@ -229,21 +206,6 @@ class HomeFragment : Fragment() {
             changeText(isNotifying)
         }
         startService(iconFileName, notificationState)
-    }
-
-    private fun saveImageFile(bitmap: Bitmap, fileName: String) {
-        requireContext().openFileOutput(fileName, Context.MODE_PRIVATE).use {
-            val image = Bitmap.createBitmap(bitmap)
-            image.compress(Bitmap.CompressFormat.PNG, 100, it)
-        }
-    }
-
-    private fun saveIconFile(bitmap: Bitmap, fileName: String) {
-        requireContext().openFileOutput(fileName, Context.MODE_PRIVATE).use {
-            val bitmapInstance = Bitmap.createBitmap(bitmap)
-            val iconImage = bitmapInstance.rgbToGray()
-            iconImage.compress(Bitmap.CompressFormat.PNG, 100, it)
-        }
     }
 
     @Composable
@@ -302,27 +264,28 @@ class HomeFragment : Fragment() {
                         contentColor = ImageNotificationTheme.colors.text
                     )
                 ) {
+                    val buttonIconDrawable = if (isNotifying) {
+                        ResourcesCompat.getDrawable(
+                            resources,
+                            R.drawable.ic_pin,
+                            null
+                        ) as VectorDrawable
+                    } else {
+                        ResourcesCompat.getDrawable(
+                            resources,
+                            R.drawable.ic_pin_not,
+                            null
+                        ) as VectorDrawable
+                    }
+                    val bitmap = Bitmap.createBitmap(
+                        buttonIconDrawable.intrinsicWidth,
+                        buttonIconDrawable.intrinsicHeight, Bitmap.Config.ARGB_8888
+                    )
+                    val canvas = Canvas(bitmap)
+                    buttonIconDrawable.setBounds(0, 0, canvas.width, canvas.height)
+                    buttonIconDrawable.draw(canvas)
+
                     Row {
-                        val buttonIconDrawable = if (isNotifying) {
-                            ResourcesCompat.getDrawable(
-                                resources,
-                                R.drawable.ic_pin,
-                                null
-                            ) as VectorDrawable
-                        } else {
-                            ResourcesCompat.getDrawable(
-                                resources,
-                                R.drawable.ic_pin_not,
-                                null
-                            ) as VectorDrawable
-                        }
-                        val bitmap = Bitmap.createBitmap(
-                            buttonIconDrawable.intrinsicWidth,
-                            buttonIconDrawable.intrinsicHeight, Bitmap.Config.ARGB_8888
-                        )
-                        val canvas = Canvas(bitmap)
-                        buttonIconDrawable.setBounds(0, 0, canvas.width, canvas.height)
-                        buttonIconDrawable.draw(canvas)
                         Icon(bitmap = bitmap.asImageBitmap(), contentDescription = null)
                         Text(
                             text = it.getString(requireContext()),
