@@ -1,6 +1,5 @@
 package com.amegane3231.imagenotification.ui.activities
 
-import android.content.Intent
 import android.content.res.Resources
 import android.os.Bundle
 import androidx.activity.compose.setContent
@@ -31,11 +30,8 @@ class MainActivity : AppCompatActivity() {
 
         val appLaunchedState = PreferenceManager.getDefaultSharedPreferences(applicationContext)
             .getInt(SharedPreferenceKey.AppLaunchedState.name, AppLaunchState.InitialLaunch.state)
-        if (appLaunchedState == 0) {
-            val intent = Intent(this, TutorialActivity::class.java)
-            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
-            startActivity(intent)
-            finish()
+        if (appLaunchedState == AppLaunchState.InitialLaunch.state) {
+            findNavController().navigate(R.id.action_home_to_tutorial)
         }
 
         setContent {
