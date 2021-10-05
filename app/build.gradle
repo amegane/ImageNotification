@@ -42,8 +42,8 @@ android {
         useIR = true
     }
     composeOptions {
-        kotlinCompilerVersion '1.5.10'
-        kotlinCompilerExtensionVersion '1.0.0'
+        kotlinCompilerVersion "$kotlin_version"
+        kotlinCompilerExtensionVersion "$compose_version"
     }
     packagingOptions {
         resources {
