@@ -78,7 +78,7 @@ class HomeFragment : Fragment() {
                 SharedPreferenceKey.AppLaunchedState.name,
                 AppLaunchState.FirstChoiceImage.state
             )
-        if (appLaunchedState == AppLaunchState.FirstChoiceImage.state) {
+        if (appLaunchedState == AppLaunchState.InitialLaunch.state) {
             findNavController().navigate(R.id.action_home_to_tutorial)
         } else if (appLaunchedState == AppLaunchState.NotSetImage.state) {
             PreferenceManager.getDefaultSharedPreferences(requireContext()).edit {
