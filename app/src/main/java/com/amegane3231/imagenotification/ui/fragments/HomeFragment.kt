@@ -4,8 +4,6 @@ import android.app.Activity
 import android.content.Intent
 import android.content.res.Resources
 import android.graphics.Bitmap
-import android.graphics.Canvas
-import android.graphics.drawable.VectorDrawable
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -23,6 +21,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.edit
@@ -78,21 +77,26 @@ class HomeFragment : Fragment() {
                 SharedPreferenceKey.AppLaunchedState.name,
                 AppLaunchState.FirstChoiceImage.state
             )
-        if (appLaunchedState == AppLaunchState.InitialLaunch.state) {
-            findNavController().navigate(R.id.action_home_to_tutorial)
-        } else if (appLaunchedState == AppLaunchState.NotSetImage.state) {
-            PreferenceManager.getDefaultSharedPreferences(requireContext()).edit {
-                putInt(
-                    SharedPreferenceKey.AppLaunchedState.name,
-                    AppLaunchState.FirstChoiceImage.state
-                )
+        when (appLaunchedState) {
+            AppLaunchState.InitialLaunch.state -> {
+                findNavController().navigate(R.id.action_home_to_tutorial)
             }
-            val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
-                addCategory(Intent.CATEGORY_OPENABLE)
-                type = "image/png"
+            AppLaunchState.NotSetImage.state -> {
+                PreferenceManager.getDefaultSharedPreferences(requireContext()).edit {
+                    putInt(
+                        SharedPreferenceKey.AppLaunchedState.name,
+                        AppLaunchState.FirstChoiceImage.state
+                    )
+                }
+                val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+                    addCategory(Intent.CATEGORY_OPENABLE)
+                    type = "image/png"
+                }
+                if (intent.resolveActivity(requireContext().packageManager) != null) {
+                    getImageContent.launch(intent)
+                }
             }
-            if (intent.resolveActivity(requireContext().packageManager) != null) {
-                getImageContent.launch(intent)
+            AppLaunchState.FirstChoiceImage.state -> {
             }
         }
 
@@ -126,7 +130,7 @@ class HomeFragment : Fragment() {
                     topBar = { AppBar(getString(R.string.app_name)) },
                     bottomBar = { AdView() },
                     content = {
-                            LayoutContent()
+                        LayoutContent()
                     }
                 )
             }
@@ -143,7 +147,8 @@ class HomeFragment : Fragment() {
             isNotifying = true
         } else {
             val iconImage =
-                ResourcesCompat.getDrawable(resources, R.drawable.image_notification, null)!!
+                ResourcesCompat
+                    .getDrawable(resources, R.drawable.image_notification, null)!!
                     .toBitmap(
                         DEFAULT_IMAGE_WIDTH,
                         DEFAULT_IMAGE_HEIGHT,
@@ -164,7 +169,8 @@ class HomeFragment : Fragment() {
             )
         } else {
             homeViewModel.setImage(
-                ResourcesCompat.getDrawable(resources, R.drawable.image_notification, null)!!
+                ResourcesCompat
+                    .getDrawable(resources, R.drawable.image_notification, null)!!
                     .toBitmap(
                         DEFAULT_IMAGE_WIDTH,
                         DEFAULT_IMAGE_HEIGHT,
@@ -226,9 +232,9 @@ class HomeFragment : Fragment() {
             val imageState by homeViewModel.imageState.observeAsState()
             Image(
                 bitmap = imageState ?: createBitmap(
-                    width = DEFAULT_IMAGE_WIDTH,
-                    height = DEFAULT_IMAGE_HEIGHT,
-                    config = Bitmap.Config.ARGB_8888
+                    DEFAULT_IMAGE_WIDTH,
+                    DEFAULT_IMAGE_HEIGHT,
+                    Bitmap.Config.ARGB_8888
                 ).asImageBitmap(),
                 contentDescription = null,
                 modifier = Modifier
@@ -260,6 +266,10 @@ class HomeFragment : Fragment() {
                             startService(NotificationState.CANCEL_IMAGE)
                         }
                     },
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        backgroundColor = if (isNotifying) ImageNotificationTheme.colors.primary else ImageNotificationTheme.colors.disable,
+                        contentColor = ImageNotificationTheme.colors.text
+                    ),
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(BUTTON_HEIGHT)
@@ -267,35 +277,14 @@ class HomeFragment : Fragment() {
                             top = BUTTON_PADDING,
                             start = BUTTON_PADDING,
                             end = BUTTON_PADDING
-                        ),
-                    colors = ButtonDefaults.outlinedButtonColors(
-                        backgroundColor = if (isNotifying) ImageNotificationTheme.colors.primary else ImageNotificationTheme.colors.disable,
-                        contentColor = ImageNotificationTheme.colors.text
-                    )
+                        )
                 ) {
-                    val buttonIconDrawable = if (isNotifying) {
-                        ResourcesCompat.getDrawable(
-                            resources,
-                            R.drawable.ic_pin,
-                            null
-                        ) as VectorDrawable
-                    } else {
-                        ResourcesCompat.getDrawable(
-                            resources,
-                            R.drawable.ic_pin_not,
-                            null
-                        ) as VectorDrawable
-                    }
-                    val bitmap = Bitmap.createBitmap(
-                        buttonIconDrawable.intrinsicWidth,
-                        buttonIconDrawable.intrinsicHeight, Bitmap.Config.ARGB_8888
-                    )
-                    val canvas = Canvas(bitmap)
-                    buttonIconDrawable.setBounds(0, 0, canvas.width, canvas.height)
-                    buttonIconDrawable.draw(canvas)
 
                     Row {
-                        Icon(bitmap = bitmap.asImageBitmap(), contentDescription = null)
+                        Icon(
+                            painter = painterResource(id = if (isNotifying) R.drawable.ic_pin else R.drawable.ic_pin_not),
+                            contentDescription = null
+                        )
                         Text(
                             text = it.getString(requireContext()),
                             modifier = Modifier.padding(top = TEXT_PADDING)
@@ -314,7 +303,8 @@ class HomeFragment : Fragment() {
                 val adView = com.google.android.gms.ads.AdView(context)
                 val displayMetrics = Resources.getSystem().displayMetrics
                 val width = (displayMetrics.widthPixels / displayMetrics.density).toInt()
-                adView.adSize = AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(context, width)
+                adView.adSize =
+                    AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(context, width)
                 adView.adUnitId = BANNER_AD_UNIT_ID
                 adView.loadAd(AdRequest.Builder().build())
                 adView
