@@ -2,6 +2,7 @@ package com.amegane3231.imagenotification.ui.fragments
 
 import android.app.Activity
 import android.content.Intent
+import android.content.res.Resources
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.drawable.VectorDrawable
@@ -14,10 +15,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.ButtonDefaults
-import androidx.compose.material.Icon
-import androidx.compose.material.OutlinedButton
-import androidx.compose.material.Text
+import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
@@ -26,6 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.edit
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.graphics.createBitmap
@@ -39,9 +38,11 @@ import com.amegane3231.imagenotification.data.AppLaunchState
 import com.amegane3231.imagenotification.data.NotificationState
 import com.amegane3231.imagenotification.data.SharedPreferenceKey
 import com.amegane3231.imagenotification.service.ForeGroundService
+import com.amegane3231.imagenotification.ui.compose.AppBar
 import com.amegane3231.imagenotification.ui.theme.ImageNotificationTheme
 import com.amegane3231.imagenotification.viewmodels.HomeViewModel
 import com.google.android.gms.ads.AdRequest
+import com.google.android.gms.ads.AdSize
 import com.google.android.gms.ads.LoadAdError
 import com.google.android.gms.ads.interstitial.InterstitialAd
 import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback
@@ -98,7 +99,7 @@ class HomeFragment : Fragment() {
         val adRequest = AdRequest.Builder().build()
         InterstitialAd.load(
             requireContext(),
-            AD_UNIT_ID,
+            INTERSTITIAL_AD_UNIT_ID,
             adRequest,
             object : InterstitialAdLoadCallback() {
                 override fun onAdFailedToLoad(adError: LoadAdError) {
@@ -119,7 +120,15 @@ class HomeFragment : Fragment() {
     ): View {
         return ComposeView(inflater.context).apply {
             setContent {
-                LayoutContent()
+                val scaffoldState = rememberScaffoldState()
+                Scaffold(
+                    scaffoldState = scaffoldState,
+                    topBar = { AppBar(getString(R.string.app_name)) },
+                    bottomBar = { AdView() },
+                    content = {
+                            LayoutContent()
+                    }
+                )
             }
         }
     }
@@ -297,12 +306,29 @@ class HomeFragment : Fragment() {
         }
     }
 
+    @Composable
+    fun AdView() {
+        AndroidView(
+            modifier = Modifier.fillMaxWidth(),
+            factory = { context ->
+                val adView = com.google.android.gms.ads.AdView(context)
+                val displayMetrics = Resources.getSystem().displayMetrics
+                val width = (displayMetrics.widthPixels / displayMetrics.density).toInt()
+                adView.adSize = AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(context, width)
+                adView.adUnitId = BANNER_AD_UNIT_ID
+                adView.loadAd(AdRequest.Builder().build())
+                adView
+            }
+        )
+    }
+
     companion object {
         private const val DEFAULT_IMAGE_WIDTH = 448
         private const val DEFAULT_IMAGE_HEIGHT = 448
         private val TEXT_PADDING = 2.dp
         private val BUTTON_HEIGHT = 80.dp
         private val BUTTON_PADDING = 24.dp
-        private const val AD_UNIT_ID = "ca-app-pub-3940256099942544/1033173712"
+        private const val BANNER_AD_UNIT_ID = "ca-app-pub-3940256099942544/6300978111"
+        private const val INTERSTITIAL_AD_UNIT_ID = "ca-app-pub-3940256099942544/1033173712"
     }
 }

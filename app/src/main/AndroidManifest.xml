@@ -22,7 +22,7 @@
         android:theme="@style/Theme.ImageNotification">
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
-            android:value="ca-app-pub-3711976931693295~4291975630"/>
+            android:value="ca-app-pub-3940256099942544~3347511713"/>
         <activity
             android:name=".ui.activities.MainActivity"
             android:exported="true">
