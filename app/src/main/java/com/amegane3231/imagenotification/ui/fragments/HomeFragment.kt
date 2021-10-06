@@ -320,7 +320,7 @@ class HomeFragment : Fragment() {
         private val BUTTON_HEIGHT = 80.dp
         private val BUTTON_PADDING = 24.dp
         private val BUTTON_ICON_PADDING = 12.dp
-        private const val BANNER_AD_UNIT_ID = "ca-app-pub-3940256099942544/6300978111"
-        private const val INTERSTITIAL_AD_UNIT_ID = "ca-app-pub-3940256099942544/1033173712"
+        private const val BANNER_AD_UNIT_ID = "ca-app-pub-3711976931693295/1355176328"
+        private const val INTERSTITIAL_AD_UNIT_ID = "ca-app-pub-3711976931693295/4608859775"
     }
 }
