@@ -75,7 +75,7 @@ class HomeFragment : Fragment() {
         val appLaunchedState = PreferenceManager.getDefaultSharedPreferences(requireContext())
             .getInt(
                 SharedPreferenceKey.AppLaunchedState.name,
-                AppLaunchState.FirstChoiceImage.state
+                AppLaunchState.InitialLaunch.state
             )
         when (appLaunchedState) {
             AppLaunchState.InitialLaunch.state -> {
