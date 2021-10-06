@@ -1,6 +1,6 @@
 <resources>
     <string name="app_name">ImageStrap</string>
-    <string name="button_change_image">変更</string>
+    <string name="button_change_image">画像を変更</string>
     <string name="text_display_notification">表示</string>
     <string name="text_release_notification">非表示</string>
     <string name="title_activity_tutorial">TutorialActivity</string>
@@ -8,4 +8,5 @@
     <string name="text_app_description2">ステータスバーには上のように\n表示されます</string>
     <string name="text_app_description3">ぜひ、あなたのお気に入りの画像と\n一緒に過ごしましょう！</string>
     <string name="button_start">はじめる</string>
+    <string name="cannot_access_device">端末にアクセスできませんでした</string>
 </resources>

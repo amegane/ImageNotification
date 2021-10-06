@@ -9,6 +9,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -208,10 +209,12 @@ class HomeFragment : Fragment() {
         val formatter = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault())
         val imageFileName = "image_${formatter.format(date)}.png"
         val iconFileName = "icon_${formatter.format(date)}.png"
+
         PreferenceManager.getDefaultSharedPreferences(requireContext()).edit {
             putString(SharedPreferenceKey.ImageFileName.name, imageFileName)
             putString(SharedPreferenceKey.IconFileName.name, iconFileName)
         }
+
         homeViewModel.saveImageFile(bitmap, imageFileName, requireContext())
         homeViewModel.saveIconFile(bitmap, iconFileName, requireContext())
         isNotifying = true
@@ -220,6 +223,7 @@ class HomeFragment : Fragment() {
             changeFileName(iconFileName)
             changeText(isNotifying)
         }
+
         startService(iconFileName, notificationState)
     }
 
@@ -250,6 +254,48 @@ class HomeFragment : Fragment() {
                     },
             )
 
+            OutlinedButton(
+                onClick = {
+                    val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+                        addCategory(Intent.CATEGORY_OPENABLE)
+                        type = "image/png"
+                    }
+                    if (intent.resolveActivity(requireContext().packageManager) != null) {
+                        getImageContent.launch(intent)
+                    } else {
+                        Toast.makeText(
+                            requireContext(),
+                            getString(R.string.cannot_access_device),
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                },
+                colors = ButtonDefaults.outlinedButtonColors(
+                    backgroundColor = ImageNotificationTheme.colors.primary,
+                    contentColor = ImageNotificationTheme.colors.text
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(BUTTON_HEIGHT)
+                    .padding(
+                        top = BUTTON_PADDING,
+                        start = BUTTON_PADDING,
+                        end = BUTTON_PADDING
+                    )
+            ) {
+                Row {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_image),
+                        contentDescription = null,
+                        modifier = Modifier.padding(end = BUTTON_ICON_PADDING)
+                    )
+                    Text(
+                        text = getString(R.string.button_change_image),
+                        modifier = Modifier.padding(top = TEXT_PADDING)
+                    )
+                }
+            }
+
             val notificationState by homeViewModel.notificationState.observeAsState()
             notificationState?.let {
                 OutlinedButton(
@@ -279,21 +325,28 @@ class HomeFragment : Fragment() {
                             end = BUTTON_PADDING
                         )
                 ) {
-
                     Row {
-                        Icon(
-                            painter = painterResource(id = if (isNotifying) R.drawable.ic_pin else R.drawable.ic_pin_not),
-                            contentDescription = null,
-                            modifier = Modifier.padding(end = BUTTON_ICON_PADDING)
-                        )
-                        Text(
-                            text = it.getString(requireContext()),
-                            modifier = Modifier.padding(top = TEXT_PADDING)
+                        DisplaySwitchButton(
+                            isDisplayed = isNotifying,
+                            text = it.getString(requireContext())
                         )
                     }
                 }
             }
         }
+    }
+
+    @Composable
+    fun DisplaySwitchButton(isDisplayed: Boolean, text: String) {
+        Icon(
+            painter = painterResource(id = if (isDisplayed) R.drawable.ic_pin else R.drawable.ic_pin_not),
+            contentDescription = null,
+            modifier = Modifier.padding(end = BUTTON_ICON_PADDING)
+        )
+        Text(
+            text = text,
+            modifier = Modifier.padding(top = TEXT_PADDING)
+        )
     }
 
     @Composable
