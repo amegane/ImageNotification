@@ -1,5 +1,6 @@
 package com.amegane3231.imagenotification.ui.fragments
 
+import android.graphics.Bitmap
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -152,21 +153,7 @@ class TutorialFragment : Fragment() {
                         .fillMaxWidth()
                         .padding(top = PAGER_PADDING)
                 ) {
-                    Image(
-                        bitmap = tutorialPages[it].image.asImageBitmap(),
-                        contentDescription = null,
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier.padding(top = IMAGE_PADDING)
-                    )
-                    Text(
-                        text = tutorialPages[it].text,
-                        color = ImageNotificationTheme.colors.text,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.padding(
-                            horizontal = TEXT_PADDING_HORIZONTAL,
-                            vertical = TEXT_PADDING_VERTICAL
-                        )
-                    )
+                    PageView(image = tutorialPages[it].image, text = tutorialPages[it].text)
                 }
             }
 

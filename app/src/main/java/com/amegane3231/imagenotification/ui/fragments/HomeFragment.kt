@@ -283,19 +283,27 @@ class HomeFragment : Fragment() {
                         )
                 ) {
                     Row {
-                        Icon(
-                            painter = painterResource(id = if (isNotifying) R.drawable.ic_pin else R.drawable.ic_pin_not),
-                            contentDescription = null,
-                            modifier = Modifier.padding(end = BUTTON_ICON_PADDING)
-                        )
-                        Text(
-                            text = it.getString(requireContext()),
-                            modifier = Modifier.padding(top = TEXT_PADDING)
+                        DisplaySwitchButton(
+                            isDisplayed = isNotifying,
+                            text = it.getString(requireContext())
                         )
                     }
                 }
             }
         }
+    }
+
+    @Composable
+    fun DisplaySwitchButton(isDisplayed: Boolean, text: String) {
+        Icon(
+            painter = painterResource(id = if (isDisplayed) R.drawable.ic_pin else R.drawable.ic_pin_not),
+            contentDescription = null,
+            modifier = Modifier.padding(end = BUTTON_ICON_PADDING)
+        )
+        Text(
+            text = text,
+            modifier = Modifier.padding(top = TEXT_PADDING)
+        )
     }
 
     @Composable
