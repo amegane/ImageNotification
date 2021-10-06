@@ -179,11 +179,11 @@ class TutorialFragment : Fragment() {
                         .edit {
                             putInt(
                                 SharedPreferenceKey.AppLaunchedState.name,
-                                AppLaunchState.NotSetImage.state
+                                AppLaunchState.FirstChoiceImage.state
                             )
                         }
                     val action =
-                        TutorialFragmentDirections.actionTutorialToHome(AppLaunchState.NotSetImage.state)
+                        TutorialFragmentDirections.actionTutorialToHome(AppLaunchState.FirstChoiceImage.state)
                     findNavController().navigate(action)
                 },
                 modifier = Modifier

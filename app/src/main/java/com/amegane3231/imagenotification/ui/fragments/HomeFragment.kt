@@ -81,11 +81,11 @@ class HomeFragment : Fragment() {
             AppLaunchState.InitialLaunch.state -> {
                 findNavController().navigate(R.id.action_home_to_tutorial)
             }
-            AppLaunchState.NotSetImage.state -> {
+            AppLaunchState.FirstChoiceImage.state -> {
                 PreferenceManager.getDefaultSharedPreferences(requireContext()).edit {
                     putInt(
                         SharedPreferenceKey.AppLaunchedState.name,
-                        AppLaunchState.FirstChoiceImage.state
+                        AppLaunchState.CompletedTutorial.state
                     )
                 }
                 val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
@@ -96,7 +96,7 @@ class HomeFragment : Fragment() {
                     getImageContent.launch(intent)
                 }
             }
-            AppLaunchState.FirstChoiceImage.state -> {
+            AppLaunchState.CompletedTutorial.state -> {
             }
         }
 
