@@ -260,7 +260,11 @@ class HomeFragment : Fragment() {
                     if (intent.resolveActivity(requireContext().packageManager) != null) {
                         getImageContent.launch(intent)
                     } else {
-                        Toast.makeText(requireContext(), getString(R.string.cannot_access_device), Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            requireContext(),
+                            getString(R.string.cannot_access_device),
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
                 },
                 colors = ButtonDefaults.outlinedButtonColors(
