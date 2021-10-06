@@ -283,7 +283,8 @@ class HomeFragment : Fragment() {
                     Row {
                         Icon(
                             painter = painterResource(id = if (isNotifying) R.drawable.ic_pin else R.drawable.ic_pin_not),
-                            contentDescription = null
+                            contentDescription = null,
+                            modifier = Modifier.padding(end = BUTTON_ICON_PADDING)
                         )
                         Text(
                             text = it.getString(requireContext()),
@@ -318,6 +319,7 @@ class HomeFragment : Fragment() {
         private val TEXT_PADDING = 2.dp
         private val BUTTON_HEIGHT = 80.dp
         private val BUTTON_PADDING = 24.dp
+        private val BUTTON_ICON_PADDING = 12.dp
         private const val BANNER_AD_UNIT_ID = "ca-app-pub-3940256099942544/6300978111"
         private const val INTERSTITIAL_AD_UNIT_ID = "ca-app-pub-3940256099942544/1033173712"
     }
