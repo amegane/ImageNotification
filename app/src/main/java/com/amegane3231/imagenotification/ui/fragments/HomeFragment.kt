@@ -299,7 +299,6 @@ class HomeFragment : Fragment() {
     @Composable
     fun AdView() {
         AndroidView(
-            modifier = Modifier.fillMaxWidth(),
             factory = { context ->
                 val adView = com.google.android.gms.ads.AdView(context)
                 val displayMetrics = Resources.getSystem().displayMetrics
@@ -309,7 +308,8 @@ class HomeFragment : Fragment() {
                 adView.adUnitId = BANNER_AD_UNIT_ID
                 adView.loadAd(AdRequest.Builder().build())
                 adView
-            }
+            },
+            modifier = Modifier.fillMaxWidth()
         )
     }
 

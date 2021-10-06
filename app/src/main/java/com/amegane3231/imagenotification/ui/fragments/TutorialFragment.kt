@@ -137,18 +137,18 @@ class TutorialFragment : Fragment() {
             setPagerBackgroundColor(pagerState, tutorialPages.map { it.backgroundColor })
         )
         Column(
-            modifier = Modifier.background(animatedColor.value),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
+            verticalArrangement = Arrangement.Center,
+            modifier = Modifier.background(animatedColor.value)
+            ) {
             HorizontalPager(state = pagerState, itemSpacing = PAGER_ITEM_SPACING) {
                 Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center,
                     modifier = Modifier
                         .background(animatedColor.value)
                         .fillMaxWidth()
-                        .padding(top = PAGER_PADDING),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
+                        .padding(top = PAGER_PADDING)
                 ) {
                     Image(
                         bitmap = tutorialPages[it].image.asImageBitmap(),
@@ -158,12 +158,12 @@ class TutorialFragment : Fragment() {
                     )
                     Text(
                         text = tutorialPages[it].text,
+                        color = ImageNotificationTheme.colors.text,
+                        textAlign = TextAlign.Center,
                         modifier = Modifier.padding(
                             horizontal = TEXT_PADDING_HORIZONTAL,
                             vertical = TEXT_PADDING_VERTICAL
-                        ),
-                        color = ImageNotificationTheme.colors.text,
-                        textAlign = TextAlign.Center,
+                        )
                     )
                 }
             }
@@ -186,16 +186,16 @@ class TutorialFragment : Fragment() {
                         TutorialFragmentDirections.actionTutorialToHome(AppLaunchState.FirstChoiceImage.state)
                     findNavController().navigate(action)
                 },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(BUTTON_HEIGHT)
-                    .padding(top = BUTTON_PADDING, start = BUTTON_PADDING, end = BUTTON_PADDING)
-                    .alpha(buttonAlpha),
                 colors = ButtonDefaults.outlinedButtonColors(
                     backgroundColor = White,
                     contentColor = animatedColor.value
                 ),
-                enabled = isLastPage
+                enabled = isLastPage,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(BUTTON_HEIGHT)
+                    .padding(top = BUTTON_PADDING, start = BUTTON_PADDING, end = BUTTON_PADDING)
+                    .alpha(buttonAlpha)
             ) {
                 Text(text = getString(R.string.button_start))
             }
