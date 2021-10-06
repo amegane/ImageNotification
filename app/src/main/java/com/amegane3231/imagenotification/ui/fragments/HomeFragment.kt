@@ -208,10 +208,12 @@ class HomeFragment : Fragment() {
         val formatter = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault())
         val imageFileName = "image_${formatter.format(date)}.png"
         val iconFileName = "icon_${formatter.format(date)}.png"
+
         PreferenceManager.getDefaultSharedPreferences(requireContext()).edit {
             putString(SharedPreferenceKey.ImageFileName.name, imageFileName)
             putString(SharedPreferenceKey.IconFileName.name, iconFileName)
         }
+
         homeViewModel.saveImageFile(bitmap, imageFileName, requireContext())
         homeViewModel.saveIconFile(bitmap, iconFileName, requireContext())
         isNotifying = true
@@ -220,6 +222,7 @@ class HomeFragment : Fragment() {
             changeFileName(iconFileName)
             changeText(isNotifying)
         }
+
         startService(iconFileName, notificationState)
     }
 
@@ -279,7 +282,6 @@ class HomeFragment : Fragment() {
                             end = BUTTON_PADDING
                         )
                 ) {
-
                     Row {
                         Icon(
                             painter = painterResource(id = if (isNotifying) R.drawable.ic_pin else R.drawable.ic_pin_not),

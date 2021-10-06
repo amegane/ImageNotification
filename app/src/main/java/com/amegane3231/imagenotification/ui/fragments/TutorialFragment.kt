@@ -98,6 +98,7 @@ class TutorialFragment : Fragment() {
                     } else {
                         pagerState.currentPage + floor(pagerState.currentPageOffset).toInt()
                     }
+
                 Color(
                     ColorUtils.blendARGB(
                         colorList[currentIndex].toArgb(),
@@ -114,6 +115,7 @@ class TutorialFragment : Fragment() {
                     } else {
                         pagerState.currentPage + ceil(pagerState.currentPageOffset).toInt()
                     }
+
                 Color(
                     ColorUtils.blendARGB(
                         colorList[previousIndex].toArgb(),
@@ -140,7 +142,7 @@ class TutorialFragment : Fragment() {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
             modifier = Modifier.background(animatedColor.value)
-            ) {
+        ) {
             HorizontalPager(state = pagerState, itemSpacing = PAGER_ITEM_SPACING) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
@@ -167,10 +169,12 @@ class TutorialFragment : Fragment() {
                     )
                 }
             }
+
             Indicators(
                 currentPosition = pagerState.currentPage,
                 contentCount = pagerState.pageCount
             )
+
             val isLastPage = pagerState.currentPage == pagerState.pageCount - 1
             val buttonAlpha = if (isLastPage) 1F else 0F
             OutlinedButton(
@@ -201,6 +205,25 @@ class TutorialFragment : Fragment() {
             }
 
         }
+    }
+
+    @Composable
+    fun PageView(image: Bitmap, text: String) {
+        Image(
+            bitmap = image.asImageBitmap(),
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.padding(top = IMAGE_PADDING)
+        )
+        Text(
+            text = text,
+            color = ImageNotificationTheme.colors.text,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(
+                horizontal = TEXT_PADDING_HORIZONTAL,
+                vertical = TEXT_PADDING_VERTICAL
+            )
+        )
     }
 
     companion object {
