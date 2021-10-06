@@ -1,6 +1,5 @@
 package com.amegane3231.imagenotification.ui.fragments
 
-import android.graphics.Bitmap
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -11,7 +10,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.OutlinedButton
-import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -34,6 +32,7 @@ import androidx.preference.PreferenceManager
 import com.amegane3231.imagenotification.R
 import com.amegane3231.imagenotification.data.AppLaunchState
 import com.amegane3231.imagenotification.data.SharedPreferenceKey
+import com.amegane3231.imagenotification.data.TutorialPageData
 import com.amegane3231.imagenotification.ui.compose.Indicators
 import com.amegane3231.imagenotification.ui.theme.*
 import com.google.accompanist.pager.ExperimentalPagerApi
@@ -50,50 +49,36 @@ class TutorialFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        val imageList = mutableListOf<Bitmap>().apply {
-            add(
+        val tutorialPages = listOf(
+            TutorialPageData(
                 ResourcesCompat
                     .getDrawable(resources, R.drawable.description_image, null)!!
-                    .toBitmap(PAGER_IMAGE_WIDTH, PAGER_IMAGE_HEIGHT, null)
-            )
-            add(
+                    .toBitmap(PAGER_IMAGE_WIDTH, PAGER_IMAGE_HEIGHT, null),
+                getString(R.string.text_app_description),
+                LightBlue400
+            ),
+            TutorialPageData(
                 ResourcesCompat
                     .getDrawable(resources, R.drawable.description_image_white, null)!!
-                    .toBitmap(PAGER_IMAGE_WIDTH, PAGER_IMAGE_HEIGHT, null)
-            )
-            add(
+                    .toBitmap(PAGER_IMAGE_WIDTH, PAGER_IMAGE_HEIGHT, null),
+                getString(R.string.text_app_description2),
+                Green400
+            ),
+            TutorialPageData(
                 ResourcesCompat
                     .getDrawable(resources, R.drawable.smartphone_people, null)!!
-                    .toBitmap(PAGER_IMAGE_WIDTH, PAGER_IMAGE_HEIGHT, null)
+                    .toBitmap(PAGER_IMAGE_WIDTH, PAGER_IMAGE_HEIGHT, null),
+                getString(R.string.text_app_description3),
+                Orange400
             )
-        }
-        val textList = mutableListOf<String>().apply {
-            add(getString(R.string.text_app_description))
-            add(getString(R.string.text_app_description2))
-            add(getString(R.string.text_app_description3))
-        }
-        val colorList = mutableListOf<Color>().apply {
-            add(LightBlue400)
-            add(Green400)
-            add(Orange400)
-        }
+        )
         return ComposeView(inflater.context).apply {
             setContent {
-                val pagerState = rememberPagerState(pageCount = 3)
-                ImageNotificationTheme {
-                    Surface(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .fillMaxHeight(),
-                    ) {
-                        TutorialViewPager(
-                            pagerState = pagerState,
-                            imageList = imageList,
-                            textList = textList,
-                            colorList = colorList
-                        )
-                    }
-                }
+                val pagerState = rememberPagerState(pageCount = tutorialPages.size)
+                TutorialViewPager(
+                    pagerState = pagerState,
+                    tutorialPages = tutorialPages
+                )
             }
         }
     }
@@ -146,12 +131,10 @@ class TutorialFragment : Fragment() {
     @Composable
     private fun TutorialViewPager(
         pagerState: PagerState,
-        imageList: List<Bitmap>,
-        textList: List<String>,
-        colorList: List<Color>
+        tutorialPages: List<TutorialPageData>
     ) {
         val animatedColor = animateColorAsState(
-            setPagerBackgroundColor(pagerState, colorList)
+            setPagerBackgroundColor(pagerState, tutorialPages.map { it.backgroundColor })
         )
         Column(
             modifier = Modifier
@@ -169,13 +152,13 @@ class TutorialFragment : Fragment() {
                     verticalArrangement = Arrangement.Center
                 ) {
                     Image(
-                        bitmap = imageList[it].asImageBitmap(),
+                        bitmap = tutorialPages[it].image.asImageBitmap(),
                         contentDescription = null,
                         contentScale = ContentScale.Crop,
                         modifier = Modifier.padding(top = IMAGE_PADDING)
                     )
                     Text(
-                        text = textList[it],
+                        text = tutorialPages[it].text,
                         modifier = Modifier.padding(TEXT_PADDING),
                         color = ImageNotificationTheme.colors.text,
                         textAlign = TextAlign.Center,
