@@ -137,16 +137,15 @@ class TutorialFragment : Fragment() {
             setPagerBackgroundColor(pagerState, tutorialPages.map { it.backgroundColor })
         )
         Column(
-            modifier = Modifier
-                .background(animatedColor.value)
-                .fillMaxWidth()
-                .fillMaxHeight(),
+            modifier = Modifier.background(animatedColor.value),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            HorizontalPager(state = pagerState) {
+            HorizontalPager(state = pagerState, itemSpacing = PAGER_ITEM_SPACING) {
                 Column(
                     modifier = Modifier
+                        .background(animatedColor.value)
+                        .fillMaxWidth()
                         .padding(top = PAGER_PADDING),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
@@ -159,7 +158,10 @@ class TutorialFragment : Fragment() {
                     )
                     Text(
                         text = tutorialPages[it].text,
-                        modifier = Modifier.padding(TEXT_PADDING),
+                        modifier = Modifier.padding(
+                            horizontal = TEXT_PADDING_HORIZONTAL,
+                            vertical = TEXT_PADDING_VERTICAL
+                        ),
                         color = ImageNotificationTheme.colors.text,
                         textAlign = TextAlign.Center,
                     )
@@ -180,7 +182,8 @@ class TutorialFragment : Fragment() {
                                 AppLaunchState.NotSetImage.state
                             )
                         }
-                    val action = TutorialFragmentDirections.actionTutorialToHome(AppLaunchState.NotSetImage.state)
+                    val action =
+                        TutorialFragmentDirections.actionTutorialToHome(AppLaunchState.NotSetImage.state)
                     findNavController().navigate(action)
                 },
                 modifier = Modifier
@@ -203,9 +206,11 @@ class TutorialFragment : Fragment() {
     companion object {
         private const val PAGER_IMAGE_WIDTH = 720
         private const val PAGER_IMAGE_HEIGHT = 1280
+        private val PAGER_ITEM_SPACING = 24.dp
         private val PAGER_PADDING = 12.dp
         private val IMAGE_PADDING = 12.dp
-        private val TEXT_PADDING = 48.dp
+        private val TEXT_PADDING_HORIZONTAL = 24.dp
+        private val TEXT_PADDING_VERTICAL = 48.dp
         private val BUTTON_HEIGHT = 80.dp
         private val BUTTON_PADDING = 24.dp
     }
