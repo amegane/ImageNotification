@@ -13,9 +13,9 @@ import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.OutlinedButton
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.toArgb
@@ -40,6 +40,10 @@ import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.PagerState
 import com.google.accompanist.pager.rememberPagerState
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlin.math.ceil
 import kotlin.math.floor
 
@@ -162,35 +166,40 @@ class TutorialFragment : Fragment() {
                 contentCount = pagerState.pageCount
             )
 
+            val coroutineScope = rememberCoroutineScope()
             val isLastPage = pagerState.currentPage == pagerState.pageCount - 1
-            val buttonAlpha = if (isLastPage) 1F else 0F
             OutlinedButton(
                 onClick = {
-                    PreferenceManager.getDefaultSharedPreferences(requireContext())
-                        .edit {
-                            putInt(
-                                SharedPreferenceKey.AppLaunchedState.name,
-                                AppLaunchState.FirstChoiceImage.state
-                            )
+                    if (isLastPage) {
+                        PreferenceManager.getDefaultSharedPreferences(requireContext())
+                            .edit {
+                                putInt(
+                                    SharedPreferenceKey.AppLaunchedState.name,
+                                    AppLaunchState.FirstChoiceImage.state
+                                )
+                            }
+                        val action =
+                            TutorialFragmentDirections.actionTutorialToHome(AppLaunchState.FirstChoiceImage.state)
+                        findNavController().navigate(action)
+                    } else {
+                        CoroutineScope(Dispatchers.Default).launch {
+                            withContext(coroutineScope.coroutineContext) {
+                                pagerState.animateScrollToPage(pagerState.currentPage + 1)
+                            }
                         }
-                    val action =
-                        TutorialFragmentDirections.actionTutorialToHome(AppLaunchState.FirstChoiceImage.state)
-                    findNavController().navigate(action)
+                    }
                 },
                 colors = ButtonDefaults.outlinedButtonColors(
                     backgroundColor = White,
                     contentColor = animatedColor.value
                 ),
-                enabled = isLastPage,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(BUTTON_HEIGHT)
                     .padding(top = BUTTON_PADDING, start = BUTTON_PADDING, end = BUTTON_PADDING)
-                    .alpha(buttonAlpha)
             ) {
-                Text(text = getString(R.string.button_start))
+                Text(text = if (isLastPage) getString(R.string.button_start) else getString(R.string.button_next))
             }
-
         }
     }
 

@@ -7,6 +7,7 @@
     <string name="text_app_description">ImageStrapは好きな透過画像を\nステータスバーに表示できるアプリです</string>
     <string name="text_app_description2">ステータスバーには上のように\n表示されます</string>
     <string name="text_app_description3">ぜひ、あなたのお気に入りの画像と\n一緒に過ごしましょう！</string>
+    <string name="button_next">次へ</string>
     <string name="button_start">はじめる</string>
     <string name="cannot_access_device">端末にアクセスできませんでした</string>
 </resources>
